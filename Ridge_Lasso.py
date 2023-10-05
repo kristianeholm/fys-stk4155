@@ -8,7 +8,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
 from sklearn.metrics import mean_squared_error
+from sklearn import linear_model
 
+#akward numpy
 
 
 def MSE(y_data,y_model):
@@ -28,8 +30,8 @@ def FrankeFunction(x,y):
 
 
 datapoints = 500
-x = np.sort(np.random.uniform(0, 1, datapoints))
-y = np.sort(np.random.uniform(0, 1, datapoints))
+x = np.random.uniform(0, 1, datapoints)
+y = np.random.uniform(0, 1, datapoints)
 
 
 z = FrankeFunction(x, y) + 0.4* np.random.normal(size=len(x))
@@ -53,84 +55,119 @@ def create_X(x, y, n ):
 
 
 polynomial = 5
-K = 10 #number of runnings
-average_mse_train = np.zeros(polynomial)
-average_mse_test = np.zeros(polynomial)
-
-average_R2_train = np.zeros(polynomial)
-average_R2_test = np.zeros(polynomial)
+K = 1 #number of runnings
 
 betas = np.zeros((40, polynomial))
 
-nlambdas = 100
-lambdas = np.logspace(-3, 3, nlambdas)
+##lambdas only valid for lasso from 0.01
+nlambdas = 300
+lambdas = np.logspace(-1, 1, nlambdas)
+
 
 MSE_train_lamdasXpoly_ridge = np.zeros((nlambdas, 5))
 MSE_test_lamdasXpoly_ridge = np.zeros((nlambdas, 5))
 
-for k in range(K):
+MSE_train_lamdasXpoly_lasso = np.zeros((nlambdas, 5))
+MSE_test_lamdasXpoly_lasso = np.zeros((nlambdas, 5))
 
-    for b in range(nlambdas):
+for b in range(nlambdas):
+
+    # loop over polynomial degrees and calculating MSE
+
+    poly = np.linspace(1, polynomial, polynomial)  # list of degress of polynomial we are running, not zero
+
+    for i in range(1, polynomial + 1):
+        ##create the design matrix with degree i
+        X = create_X(x, y, i)
+
+        # instead of splitting x and y data seperatly, we seperate the design matrix
+        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
+
+        ##scaling
+        # average of each column
+        col_meansX = 0  # np.mean(X_train, axis=0)
+        X_train = X_train - col_meansX
+
+        col_means_z = 0  # np.mean(z_train, axis=0)
+        z_train = z_train - col_means_z
+
+        Xtrain = X_train  # [:,1:] #removing the first column, ie the intercept
+
+        # ridge
+        beta_ridge = (np.linalg.pinv(
+            (Xtrain.T @ Xtrain + (lambdas[b] * np.identity(np.shape(X)[1])))) @ Xtrain.T) @ z_train
+
+        ztildeTrain = Xtrain @ beta_ridge
+
+        ztilde = X_test @ beta_ridge
+        ztilde = ztilde
+
+        mse_manuel = MSE(z_test, ztilde)
+        mse_train = MSE(z_train, ztildeTrain)
+
+        MSE_train_lamdasXpoly_ridge[b, i - 1] = mse_train
+        MSE_test_lamdasXpoly_ridge[b, i - 1] = mse_manuel
+
+        # lasso
+        RegLasso = linear_model.Lasso(lambdas[b])
+        RegLasso.fit(X_train, z_train)
+
+        MSE_lasso_train = MSE(z_train, RegLasso.predict(X_train))
+        MSE_lasso_test = MSE(z_test, RegLasso.predict(X_test))
+
+        MSE_train_lamdasXpoly_lasso[b, i - 1] = MSE_lasso_train
+        MSE_test_lamdasXpoly_lasso[b, i - 1] = MSE_lasso_test
 
 
-        # loop over polynomial degrees and calculating MSE
-
-        poly = np.linspace(1, polynomial, polynomial)  # list of degress of polynomial we are running, not zero
-
-        for i in range(1, polynomial + 1):
-
-            ##create the design matrix with degree i
-            X = create_X(x, y, i)
-
-            # instead of splitting x and y data seperatly, we seperate the design matrix
-            X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
-
-            ##scaling
-            # average of each column
-            col_meansX = np.mean(X_train, axis=0)
-            X_train = X_train - col_meansX
-
-            col_means_z = np.mean(z_train, axis=0)
-            z_train = z_train - col_means_z
-
-            Xtrain = X_train  # [:,1:] #removing the first column, ie the intercept
-
-            beta_ridge = (np.linalg.pinv(
-                (Xtrain.T @ Xtrain + (lambdas[b] * np.identity(np.shape(X)[1])))) @ Xtrain.T) @ z_train
-
-            beta = beta_ridge
-
-            # Model prediction, we need also to transform our data set used for the prediction.
-            ztildeTrain = Xtrain @ beta
-            X_test = X_test - col_meansX  # Use mean from training data
-            ztilde = X_test @ beta
-            ztilde = ztilde + col_means_z
-
-            mse_manuel = MSE(z_test, ztilde)
-            mse_train = MSE(z_train, ztildeTrain)
-
-            average_mse_train[i - 1] += mse_train
-            average_mse_test[i - 1] += mse_manuel
-
-            MSE_train_lamdasXpoly_ridge[b, i - 1] += mse_train
-            MSE_test_lamdasXpoly_ridge[b, i - 1] += mse_manuel
-
-MSE_train_lamdasXpoly_ridge /= k
-#print(MSE_train_lamdasXpoly_ridge)
 
 P, L = X,Y = np.meshgrid(np.array([1, 2, 3, 4, 5]), lambdas)
 
 print(np.shape(P), np.shape(L), np.shape(MSE_train_lamdasXpoly_ridge))
 
-ax = plt.axes(projection='3d')
-ax.plot_surface(P, L, MSE_train_lamdasXpoly_ridge, rstride=1, cstride=1,
+fig = plt.figure(figsize=(5, 3.5))
+ax = fig.add_subplot(111, projection='3d')
+surf = ax.plot_surface(P, L, MSE_train_lamdasXpoly_ridge, rstride=1, cstride=1,
                 cmap='viridis', edgecolor='none')
+fig.colorbar(surf, ax=ax,
+				 shrink=0.5,
+				 aspect=9)
 
-ax.set_title('ٱلْحَمْدُ لِلَّٰ');
+ax.set_title(' Ridge train error');
 ax.set_xlabel('poly degree')
 ax.set_ylabel('lambda')
 ax.set_zlabel('MSE Ridge');
+
 plt.show()
+
+
+fig = plt.figure(figsize=(5, 3.5))
+ax = plt.axes(projection='3d')
+ax.plot_surface(P, L, MSE_test_lamdasXpoly_ridge, rstride=1, cstride=1,
+                cmap='viridis', edgecolor='none')
+
+fig.colorbar(surf, ax=ax,
+				 shrink=0.5,
+				 aspect=9)
+
+ax.set_title('Ridge test error');
+ax.set_xlabel('poly degree')
+ax.set_ylabel('lambda')
+ax.set_zlabel('MSE Ridge');
+
+plt.show()
+
+
+#lasso plot
+
+im = plt.pcolormesh(P, L, MSE_train_lamdasXpoly_lasso)  # drawing the function
+plt.xlabel("polynomial")
+plt.ylabel("lambda")
+# adding the Contour lines with labels
+plt.colorbar(im)  # adding the colobar on the right
+# latex fashion title
+plt.title("MSE lasso train")
+plt.show()
+
 
 
 

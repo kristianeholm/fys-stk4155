@@ -7,8 +7,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
 from sklearn.metrics import mean_squared_error
-
-
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator
+from sklearn.utils import resample
 
 def MSE(y_data,y_model):
     n = np.size(y_model)
@@ -26,12 +27,12 @@ def FrankeFunction(x,y):
 	return term1 + term2 + term3 + term4
 
 
-datapoints = 500
-x = np.sort(np.random.uniform(0, 1, datapoints))
-y = np.sort(np.random.uniform(0, 1, datapoints))
+datapoints = 300
+x = np.random.uniform(0, 1, datapoints)
+y = np.random.uniform(0, 1, datapoints)
 
 
-z = FrankeFunction(x, y) + 0.4* np.random.normal(size=len(x))
+z = FrankeFunction(x, y) + 0.2* np.random.normal(size=len(x))
 
 def create_X(x, y, n ):
 	if len(x.shape) > 1:
@@ -60,19 +61,19 @@ def fun(x, y, beta, n):
 	return f
 
 
-def plot_surface(x2, y2, beta, n):
+def plot_surface(x2, y2):
 	
 	fig = plt.figure(figsize=(10, 7))
 	ax = fig.add_subplot(111, projection='3d')
 	#x2 = y2 = np.arange(0, 1, 0.05)
 	X, Y = np.meshgrid(x2, y2)
-	zs = np.array(fun(np.ravel(X), np.ravel(Y), beta, n))
+	#zs = np.array(fun(np.ravel(X), np.ravel(Y), beta, n))
 
 	zs = np.array(FrankeFunction(np.ravel(X), np.ravel(Y)))
-	Z = zs.reshape(X.shape)
+	Z = FrankeFunction(X, Y)
 
 	ax.plot_surface(X, Y, Z, label="leastsquare surface")
-	ax.scatter3D(x, y, z, color="green", label="data")
+	#ax.scatter3D(x, y, Z, color="green", label="data")
 	##ax.scatter3D(xx, yy, ztilde, color="black", label="leastsquare")
 
 	ax.set_xlabel('x')
@@ -81,40 +82,41 @@ def plot_surface(x2, y2, beta, n):
 	plt.show()
 
 
-#plot_surface(x,y,beta,5)
+#plot_surface(x,y)
+
+
+
 
 
 polynomial = 5
-K = 10 #number of runnings
+K = 1 #number of runnings
 average_mse_train = np.zeros(polynomial)
 average_mse_test = np.zeros(polynomial)
 
 average_R2_train = np.zeros(polynomial)
 average_R2_test = np.zeros(polynomial)
 
-betas = np.zeros((40, polynomial))
+betas = np.zeros((150, polynomial))
 
-nlambdas = 100
-lambdas = np.logspace(-4, 4, nlambdas)
 
 for k in range(K):
 
 	# loop over polynomial degrees and calculating MSE R2 and individial beta values
 
-	MSE_values_test = np.zeros(polynomial)
+	MSE_values_testxxx = np.zeros(polynomial)
 	MSE_values_train = np.zeros(polynomial)
-	R2_values_test = np.zeros(polynomial)
+	#R2_values_test = np.zeros(polynomial)
+
 	poly = np.linspace(1, polynomial, polynomial) #list of degress of polynomial we are running, not zero
-
-
 
 	for i in range(1, polynomial + 1):
 
+		##apply bootstrap here
 		X = create_X(x, y, i)
-
 
 		# instead of splitting x and y data seperatly, we seperate the design matrix
 		X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
+
 
 		##scaling
 		# average of each column
@@ -130,7 +132,10 @@ for k in range(K):
 		# beta = (np.linalg.inv((X_train.T @ X_train)) @ X_train.T) @ z_train
 		beta = (np.linalg.pinv((Xtrain.T @ Xtrain)) @ Xtrain.T) @ z_train
 
-		beta_ridge = (np.linalg.pinv((Xtrain.T @ Xtrain  +  (0.5 * np.identity(np.shape(X)[1])) )) @ Xtrain.T) @ z_train
+
+		##using skitlearn functions
+
+		clf = skl.LinearRegression().fit(Xtrain, z_train)
 
 
 		# Model prediction, we need also to transform our data set used for the prediction.
@@ -139,19 +144,13 @@ for k in range(K):
 		ztilde = X_test @ beta
 		ztilde = ztilde + col_means_z
 
-		# scaler = StandardScaler()
-		# scaler.fit(X_train)
-		# scaled data
-		# X_train_scaled = scaler.transform(X_train)
-		# X_test_scaled = scaler.transform(X_test)
-
-		# clf = skl.LinearRegression().fit(X_train, z_train)
-		# clf = skl.LinearRegression().fit(X_train_scaled, z_train)
+		zpredict_skl = clf.predict(X_test)
+		zpredict_skl += col_means_z
 
 		# The mean squared error and R2 score
-		# mse = mean_squared_error(clf.predict(X_test), z_test)
-		mse_manuel = MSE(z_test, ztilde)
+		mse_test = MSE(z_test, ztilde)
 		mse_train = MSE(z_train, ztildeTrain)
+		mse_test_sklr = MSE(z_test, zpredict_skl)
 
 
 		r2 = R2(z_test, ztilde)
@@ -162,9 +161,16 @@ for k in range(K):
 		#MSE_values_test[i-1] = mse_manuel
 
 		#R2_values_test[i-1] = r2
+		"""print(f"poly {i} ")
+		print(f"train mse: {mse_train} ")
+		print(f"test mse: {mse_test} ")
+		print(f"test mse sklr: {mse_test_sklr} ")
+		print(f"betas {beta}")
+		print(f"betas sklr : {clf.coef_}")"""
+
 
 		average_mse_train[i-1] += mse_train
-		average_mse_test[i-1] += mse_manuel
+		average_mse_test[i-1] += mse_test
 
 		average_R2_train[i-1] +=r22
 		average_R2_test[i-1] +=r2
@@ -182,19 +188,22 @@ for k in range(K):
 
 
 
-
+average_mse_train = average_mse_train/K
+average_mse_test = average_mse_test/K
+average_R2_train = average_R2_train/K
+average_R2_test = average_R2_test/K
 
 fig = plt.figure()
 gs = fig.add_gridspec(3, hspace=0)
 axs = gs.subplots(sharex=True, sharey=False)
 
-fig.suptitle('SUUUUUPEEEEEERR')
-axs[0].plot(poly[:], average_mse_train[:]/k, label = " mean MSE train" )
-axs[0].plot(poly[:], average_mse_test[:]/k, label = "mean MSE test" )
+fig.suptitle('Model')
+axs[0].plot(poly[:], average_mse_train[:], label = " mean MSE train" )
+axs[0].plot(poly[:], average_mse_test[:], label = "mean MSE test" )
 axs[0].legend()
 
-axs[1].plot(poly[:], average_R2_train[:]/k, label = "mean R2 train" )
-axs[1].plot(poly[:], average_R2_test[:]/k, label = "mean R2 test")
+axs[1].plot(poly[:], average_R2_train, label = "mean R2 train" )
+axs[1].plot(poly[:], average_R2_test, label = "mean R2 test")
 axs[1].legend()
 
 for b in range(polynomial):
@@ -207,3 +216,51 @@ plt.legend()
 plt.show()
 
 
+def surface_plot():
+	fig = plt.figure(figsize=(10, 7))
+	ax = fig.add_subplot(111, projection='3d')
+	size = 100
+	xx = np.sort(np.random.uniform(0, 1, size))
+	yy = np.sort(np.random.uniform(0, 1, size))
+
+	Xgrid, Ygrid = np.meshgrid(xx, yy)
+
+	ZGrid = np.zeros((size, size))
+	for i in range(size):
+		for j in range(size):
+			x1 = Xgrid[0, i]
+			y1 = Ygrid[j, 0]
+			X = create_X(np.array([x1]), np.array([y1]), polynomial)
+			X = X - col_meansX
+			Z = X @ beta
+			ZGrid[i, j] = Z[0] + col_means_z
+
+			"""print(f"x point : {x1}")
+			print(f"y point : {y1}")
+			print(f"expected value: {FrankeFunction(x1, y1)}")
+			print(f"calculated value : {Z + col_means_z}")
+			print("-------")"""
+
+
+
+	#Plot the surface.
+	surf = ax.plot_surface(Xgrid, Ygrid, ZGrid, cmap=cm.coolwarm,
+						   linewidth=0, antialiased=False)
+	#X, Y = np.meshgrid(x, y)
+
+
+	ax.scatter3D(x, y, z, color="green", label="data points")
+
+	fig.colorbar(surf, ax=ax,
+				 shrink=0.5,
+				 aspect=9)
+
+	ax.set_xlabel('x')
+	ax.set_ylabel('y')
+	ax.set_zlabel('franke(x, y)')
+	ax.set_title(f"OLS surface degree {polynomial} ")
+	ax.legend()
+	plt.show()
+
+
+surface_plot()
