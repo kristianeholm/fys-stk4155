@@ -54,15 +54,15 @@ bootstraps = 50
 #print(f"train index: {index_train}")
 #print(f"test index: {index_test}")
 
-
-
 error = np.zeros(polynomial)
 bias = np.zeros(polynomial)
 variance = np.zeros(polynomial)
 polydegree = np.zeros(polynomial)
 
 
-"""for p in range(1, polynomial + 1):
+##bootstrap
+
+for p in range(1, polynomial + 1):
 
 	y_pred = np.empty((len(index_test), bootstraps))
 
@@ -72,9 +72,9 @@ polydegree = np.zeros(polynomial)
 		#print(f"resample indecies: {resample_indcies}")
 
 		x_, y_ = x[resample_indcies], y[resample_indcies]
-		X = create_X(x_, y_, i)
+		X = create_X(x_, y_, p)
 
-		Xtest = create_X(x[index_test], y[index_test], i)  ##only depends on i
+		Xtest = create_X(x[index_test], y[index_test], p)  ##only depends on p
 
 
 		clf = skl.LinearRegression().fit(X, z[resample_indcies])
@@ -105,7 +105,6 @@ plt.ylabel("")
 plt.title("50 bootstraps")
 plt.legend()
 plt.show()
-"""
 
 
 

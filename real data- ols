@@ -1,4 +1,3 @@
-
 import numpy as np
 from sklearn.model_selection import  train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, Normalizer
@@ -10,6 +9,9 @@ from sklearn.metrics import mean_squared_error
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 from sklearn.utils import resample
+from imageio.v2 import imread
+from mpl_toolkits.mplot3d import Axes3D
+
 
 def MSE(y_data,y_model):
     n = np.size(y_model)
@@ -18,7 +20,7 @@ def MSE(y_data,y_model):
 def R2(y_data, y_model):
     return 1 - np.sum((y_data - y_model) ** 2) / np.sum((y_data - np.mean(y_data)) ** 2)
 
-
+"""
 def FrankeFunction(x,y):
 	term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
 	term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
@@ -26,13 +28,13 @@ def FrankeFunction(x,y):
 	term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
 	return term1 + term2 + term3 + term4
 
+#datapoints = 300
+#x = np.random.uniform(0, 1, datapoints)
+#y = np.random.uniform(0, 1, datapoints)
 
-datapoints = 300
-x = np.random.uniform(0, 1, datapoints)
-y = np.random.uniform(0, 1, datapoints)
 
-
-z = FrankeFunction(x, y) + 0.2* np.random.normal(size=len(x))
+#z = FrankeFunction(x, y) + 0.2* np.random.normal(size=len(x))
+"""
 
 def create_X(x, y, n ):
 	if len(x.shape) > 1:
@@ -61,34 +63,34 @@ def fun(x, y, beta, n):
 	return f
 
 
-def plot_surface(x2, y2):
-	
-	fig = plt.figure(figsize=(10, 7))
-	ax = fig.add_subplot(111, projection='3d')
-	#x2 = y2 = np.arange(0, 1, 0.05)
-	X, Y = np.meshgrid(x2, y2)
-	#zs = np.array(fun(np.ravel(X), np.ravel(Y), beta, n))
+def plot_surface(X, Y, Z):
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    ax.set_xlabel('East')
+    ax.set_ylabel('North')
+    ax.set_zlabel('Elevation')
+    plt.show()
 
-	zs = np.array(FrankeFunction(np.ravel(X), np.ravel(Y)))
-	Z = FrankeFunction(X, Y)
+#path to the TIFF file
+file_path = 'C:/Users/krist/Downloads/sognsvann.tif'
+# Load the terrain
+terrain = imread(file_path)
 
-	ax.plot_surface(X, Y, Z, label="leastsquare surface")
-	#ax.scatter3D(x, y, Z, color="green", label="data")
-	##ax.scatter3D(xx, yy, ztilde, color="black", label="leastsquare")
+N = 1000
+m = 10 # polynomial order
+terrain = terrain[:N,:N]
 
-	ax.set_xlabel('x')
-	ax.set_ylabel('y')
-	ax.set_zlabel('f(x, y)')
-	plt.show()
+#create mesh of image pixels
+x = np.linspace(0,1,np.shape(terrain)[0])
+y = np.linspace(0, 1, np.shape(terrain)[1])
+x_mesh, y_mesh = np.meshgrid(x,y)
 
-
-#plot_surface(x,y)
-
-
+z = terrain.flatten()
+X = create_X(x_mesh,y_mesh, m)
 
 
-
-polynomial = 5
+polynomial = 10
 K = 1 #number of runnings
 average_mse_train = np.zeros(polynomial)
 average_mse_test = np.zeros(polynomial)
@@ -111,8 +113,11 @@ for k in range(K):
 
 	for i in range(1, polynomial + 1):
 
-		##apply bootstrap here
-		X = create_X(x, y, i)
+		#for artificial data
+		#X = create_X(x, y, i)
+
+		#for REAL DATA
+		X = create_X(x_mesh, y_mesh, i) #use the meshgrid data
 
 		# instead of splitting x and y data seperatly, we seperate the design matrix
 		X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
@@ -185,14 +190,12 @@ for k in range(K):
 
 
 
-
-
-
 average_mse_train = average_mse_train/K
 average_mse_test = average_mse_test/K
 average_R2_train = average_R2_train/K
 average_R2_test = average_R2_test/K
 
+#plotting results 
 fig = plt.figure()
 gs = fig.add_gridspec(3, hspace=0)
 axs = gs.subplots(sharex=True, sharey=False)
@@ -217,50 +220,34 @@ plt.show()
 
 
 def surface_plot():
-	fig = plt.figure(figsize=(10, 7))
-	ax = fig.add_subplot(111, projection='3d')
-	size = 100
-	xx = np.sort(np.random.uniform(0, 1, size))
-	yy = np.sort(np.random.uniform(0, 1, size))
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection='3d')
+    size = 100
+    xx = np.sort(np.random.uniform(0, 1, size))
+    yy = np.sort(np.random.uniform(0, 1, size))
+    Xgrid, Ygrid = np.meshgrid(xx, yy)
 
-	Xgrid, Ygrid = np.meshgrid(xx, yy)
+    ZGrid = np.zeros((size, size))
 
-	ZGrid = np.zeros((size, size))
-	for i in range(size):
-		for j in range(size):
-			x1 = Xgrid[0, i]
-			y1 = Ygrid[j, 0]
-			X = create_X(np.array([x1]), np.array([y1]), polynomial)
-			X = X - col_meansX
-			Z = X @ beta
-			ZGrid[i, j] = Z[0] + col_means_z
+    for i in range(size):
+        for j in range(size):
+            x1 = Xgrid[0, i]
+            y1 = Ygrid[j, 0]
+            X = create_X(np.array([x1]), np.array([y1]), polynomial)
+            X = X - col_meansX
+            Z = X @ beta
+            ZGrid[i, j] = Z[0] + col_means_z
 
-			"""print(f"x point : {x1}")
-			print(f"y point : {y1}")
-			print(f"expected value: {FrankeFunction(x1, y1)}")
-			print(f"calculated value : {Z + col_means_z}")
-			print("-------")"""
+    surf = ax.plot_surface(Xgrid, Ygrid, ZGrid, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+	#only plot the first 1000 datapoints for clarity
+    ax.scatter3D(x[:1000], y[:1000], z[:1000], color="green", label="data points")
+    fig.colorbar(surf, ax=ax, shrink=0.5, aspect=9)
+    ax.set_xlabel('East')
+    ax.set_ylabel('North')
+    ax.set_zlabel('Elevation')
+    ax.set_title(f"OLS surface degree {polynomial}")
+    ax.legend()
+    plt.show()
 
-
-
-	#Plot the surface.
-	surf = ax.plot_surface(Xgrid, Ygrid, ZGrid, cmap=cm.coolwarm,
-						   linewidth=0, antialiased=False)
-	#X, Y = np.meshgrid(x, y)
-
-
-	ax.scatter3D(x, y, z, color="green", label="data points")
-
-	fig.colorbar(surf, ax=ax,
-				 shrink=0.5,
-				 aspect=9)
-
-	ax.set_xlabel('x')
-	ax.set_ylabel('y')
-	ax.set_zlabel('franke(x, y)')
-	ax.set_title(f"OLS surface degree {polynomial} ")
-	ax.legend()
-	plt.show()
-
-
+# Call surface_plot function
 surface_plot()
