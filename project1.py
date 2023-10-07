@@ -27,14 +27,21 @@ def FrankeFunction(x,y):
 	term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
 	return term1 + term2 + term3 + term4
 
+#if len(sys.argv) < 5:
+#    sys.exit('Usage: project1.py <polynomial degree> <datapoints> <sigma^2 for random noise> <number of runs>')
+#Above if we want to require parameters, however the below restures the old default values.
 if len(sys.argv) < 5:
-    sys.exit('Usage: project1.py <polynomial degree> <datapoints> <sigma^2 for random noise> <number of runs>')
+	polynomial = 5
+	datapoints = 300
+	noiseSpread = 0.1
+	K = 1
 else:
 	polynomial = int(sys.argv[1])
 	datapoints = int(sys.argv[2])
 	noiseSpread = float(sys.argv[3])
 	K = int(sys.argv[4])
-print('Number of runs {}'.format(K))
+
+#print('Number of runs {}'.format(K))
 
 #polynomial = 5
 #K = 1 #number of runnings
@@ -90,7 +97,7 @@ def plot_surface(x2, y2):
 	ax.set_xlabel('x')
 	ax.set_ylabel('y')
 	ax.set_zlabel('f(x, y)')
-	plt.savefig("ols_surface_{}points.pdf".format(datapoints))
+	plt.savefig("ols_surface_{}_{}_{}.pdf".format(polynomial, datapoints, K))
 	plt.show()
 #plot_surface(x,y)
 
@@ -206,7 +213,7 @@ fig = plt.figure()
 gs = fig.add_gridspec(3, hspace=0)
 axs = gs.subplots(sharex=True, sharey=False)
 
-fig.suptitle('Model')
+fig.suptitle('OLS model')
 axs[0].plot(poly[:], average_mse_train[:], label = " mean MSE train" )
 axs[0].plot(poly[:], average_mse_test[:], label = "mean MSE test" )
 axs[0].legend()
@@ -222,7 +229,7 @@ for b in range(polynomial):
 fig.text(0.5, 0.04, 'Polynomial degree', ha='center', va='center')
 plt.legend()
 
-plt.savefig("ols_franke_3d_{}points.pdf".format(datapoints)) 
+plt.savefig("ols_model_{}_{}_{}.pdf".format(polynomial, datapoints, K))
 plt.show()
 
 
@@ -270,7 +277,7 @@ def surface_plot():
 	ax.set_zlabel('franke(x, y)')
 	ax.set_title(f"OLS surface degree {polynomial} ")
 	ax.legend()
-	plt.savefig("ols_plot_{}points.pdf".format(datapoints))
+	plt.savefig("ols_3d_{}_{}_{}.pdf".format(polynomial, datapoints, K))
 	plt.show()
 
 
