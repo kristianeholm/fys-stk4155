@@ -9,6 +9,8 @@ from sklearn.metrics import mean_squared_error
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 from sklearn.utils import resample
+from sklearn import linear_model
+
 
 def FrankeFunction(x,y):
 	term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
@@ -48,7 +50,7 @@ index = np.array(index)
 index_train, index_test = train_test_split(index, test_size=0.3)
 
 
-polynomial = 9
+polynomial = 6
 bootstraps = 50
 
 #print(f"train index: {index_train}")
@@ -62,7 +64,7 @@ variance = np.zeros(polynomial)
 polydegree = np.zeros(polynomial)
 
 
-"""for p in range(1, polynomial + 1):
+for p in range(1, polynomial + 1):
 
 	y_pred = np.empty((len(index_test), bootstraps))
 
@@ -72,9 +74,9 @@ polydegree = np.zeros(polynomial)
 		#print(f"resample indecies: {resample_indcies}")
 
 		x_, y_ = x[resample_indcies], y[resample_indcies]
-		X = create_X(x_, y_, i)
+		X = create_X(x_, y_, p)
 
-		Xtest = create_X(x[index_test], y[index_test], i)  ##only depends on i
+		Xtest = create_X(x[index_test], y[index_test], p)  ##only depends on i
 
 
 		clf = skl.LinearRegression().fit(X, z[resample_indcies])
@@ -105,7 +107,7 @@ plt.ylabel("")
 plt.title("50 bootstraps")
 plt.legend()
 plt.show()
-"""
+
 
 
 
@@ -178,3 +180,96 @@ plt.ylabel("")
 plt.title(f"{k}-fold cross validation")
 plt.legend()
 plt.show()
+
+
+##bias viariance cross variance ridge and lasso
+
+
+k = 5
+kfold = KFold(n_splits = k)
+
+# Perform the cross-validation to estimate MSE
+scores_KFold = np.zeros((polynomial, k))
+
+
+
+error = np.zeros(polynomial)
+bias = np.zeros(polynomial)
+variance = np.zeros(polynomial)
+polydegree = np.zeros(polynomial)
+lamda = 0.05
+for p in range(1, polynomial + 1):
+	j = 0
+	y_pred = np.empty((int(datapoints/k), k))
+
+	for train_inds, test_inds in kfold.split(x):
+
+		xtrain = x[train_inds]
+		ytrain = y[train_inds]
+
+		#create design matrix
+		X = create_X(xtrain, ytrain, p)
+
+		ztrain = z[train_inds]
+
+		clf = skl.LinearRegression().fit(X, ztrain)
+
+
+		##ridge and lasso only differ with few lines, for ridge calculation comment out the lasso,
+		##for lasso, comment out the ridge
+
+
+		"""should only have 1 of the belows"""
+		# ridge
+		beta_ridge = (np.linalg.pinv(
+			(X.T @ X + (lamda * np.identity(np.shape(X)[1])))) @ X.T) @ ztrain
+
+		ztildeTrain = X @ beta_ridge
+
+
+		##lasso,
+		#RegLasso = linear_model.Lasso(lamda)
+		#clf = RegLasso.fit(X, ztrain)
+
+
+
+		#this part is same for both
+		xtest = x[test_inds]
+		ytest = y[test_inds]
+		#create test design matrix
+		Xtest= create_X(xtest, ytest, p)
+		ztest = z[test_inds]
+
+
+		##only have one of these, the other should be commented out
+		z_pred = Xtest @ beta_ridge #ridge
+		#z_pred = clf.predict(Xtest) #lasso
+
+		y_pred[:, j] = z_pred
+
+		j += 1
+
+	#print(y_pred)
+	mse = np.zeros(k)
+	for i in range(k):
+		mse[i] = mean_squared_error(ztest, y_pred[:, i] )
+
+
+	error[p-1] = np.mean(mse)
+	bias[p-1] = np.mean((z[index_test] - np.mean(y_pred, axis=1, keepdims=True)) ** 2)
+	variance[p-1] = np.mean(np.var(y_pred, axis=1, keepdims=True))
+	polydegree[p-1] = p
+
+
+
+plt.plot(polydegree, error, label='Error')
+plt.plot(polydegree, bias, label='bias')
+plt.plot(polydegree, variance, label='Variance')
+plt.plot(polydegree, variance + bias, label='Bias + Variance')
+plt.xlabel("polynomial degree")
+plt.ylabel("")
+plt.title(f"{k}-fold cross validation, Ridge l = {lamda}")
+#plt.title(f"{k}-fold cross validation, Lasso l = {lamda}")
+plt.legend()
+plt.show()
+
