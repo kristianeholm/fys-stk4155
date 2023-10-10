@@ -22,11 +22,11 @@ def R2(y_data, y_model):
 
 """
 def FrankeFunction(x,y):
-	term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
-	term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
-	term3 = 0.5*np.exp(-(9*x-7)**2/4.0 - 0.25*((9*y-3)**2))
-	term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
-	return term1 + term2 + term3 + term4
+    term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
+    term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
+    term3 = 0.5*np.exp(-(9*x-7)**2/4.0 - 0.25*((9*y-3)**2))
+    term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
+    return term1 + term2 + term3 + term4
 
 #datapoints = 300
 #x = np.random.uniform(0, 1, datapoints)
@@ -37,30 +37,30 @@ def FrankeFunction(x,y):
 """
 
 def create_X(x, y, n ):
-	if len(x.shape) > 1:
-		x = np.ravel(x)
-		y = np.ravel(y)
+    if len(x.shape) > 1:
+        x = np.ravel(x)
+        y = np.ravel(y)
 
-	N = len(x)
-	l = int((n+1)*(n+2)/2)		# Number of elements in beta
-	X = np.ones((N,l))
+    N = len(x)
+    l = int((n+1)*(n+2)/2)		# Number of elements in beta
+    X = np.ones((N,l))
 
-	for i in range(1,n+1):
-		q = int((i)*(i+1)/2)
-		for k in range(i+1):
-			X[:,q+k] = (x**(i-k))*(y**k)
+    for i in range(1,n+1):
+        q = int((i)*(i+1)/2)
+        for k in range(i+1):
+            X[:,q+k] = (x**(i-k))*(y**k)
 
-	return X
+    return X
 
 
 def fun(x, y, beta, n):
-	f = beta[0]
-	for i in range(1,n+1):
-		q = int((i)*(i+1)/2)
-		for k in range(i+1):
-			#print(q+k)
-			f += beta[q+k] * (x**(i-k))*(y**k)
-	return f
+    f = beta[0]
+    for i in range(1,n+1):
+        q = int((i)*(i+1)/2)
+        for k in range(i+1):
+            #print(q+k)
+            f += beta[q+k] * (x**(i-k))*(y**k)
+    return f
 
 
 def plot_surface(X, Y, Z):
@@ -78,7 +78,7 @@ file_path = 'C:/Users/krist/Downloads/sognsvann.tif'
 terrain = imread(file_path)
 
 N = 1000
-m = 10 # polynomial order
+m = 15 # polynomial order
 terrain = terrain[:N,:N]
 
 #create mesh of image pixels
@@ -90,7 +90,7 @@ z = terrain.flatten()
 X = create_X(x_mesh,y_mesh, m)
 
 
-polynomial = 10
+polynomial = 15
 K = 1 #number of runnings
 average_mse_train = np.zeros(polynomial)
 average_mse_test = np.zeros(polynomial)
@@ -103,90 +103,97 @@ betas = np.zeros((150, polynomial))
 
 for k in range(K):
 
-	# loop over polynomial degrees and calculating MSE R2 and individial beta values
+    # loop over polynomial degrees and calculating MSE R2 and individial beta values
 
-	MSE_values_testxxx = np.zeros(polynomial)
-	MSE_values_train = np.zeros(polynomial)
-	#R2_values_test = np.zeros(polynomial)
+    MSE_values_testxxx = np.zeros(polynomial)
+    MSE_values_train = np.zeros(polynomial)
+    #R2_values_test = np.zeros(polynomial)
 
-	poly = np.linspace(1, polynomial, polynomial) #list of degress of polynomial we are running, not zero
+    poly = np.linspace(1, polynomial, polynomial) #list of degress of polynomial we are running, not zero
 
-	for i in range(1, polynomial + 1):
+    for i in range(1, polynomial + 1):
 
-		#for artificial data
-		#X = create_X(x, y, i)
+        #for artificial data
+        #X = create_X(x, y, i)
 
-		#for REAL DATA
-		X = create_X(x_mesh, y_mesh, i) #use the meshgrid data
+        #for REAL DATA
+        X = create_X(x_mesh, y_mesh, i) #use the meshgrid data
 
-		# instead of splitting x and y data seperatly, we seperate the design matrix
-		X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
-
-
-		##scaling
-		# average of each column
-		col_meansX = np.mean(X_train, axis=0)
-		X_train = X_train - col_meansX
-
-		col_means_z = np.mean(z_train, axis=0)
-		z_train = z_train - col_means_z
-
-		Xtrain = X_train  # [:,1:] #removing the first column, ie the intercept
-
-		# train model with training data
-		# beta = (np.linalg.inv((X_train.T @ X_train)) @ X_train.T) @ z_train
-		beta = (np.linalg.pinv((Xtrain.T @ Xtrain)) @ Xtrain.T) @ z_train
+        # instead of splitting x and y data seperatly, we seperate the design matrix
+        X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
 
 
-		##using skitlearn functions
+        ##scaling
+        # average of each column
+        col_meansX = np.mean(X_train, axis=0)
+        X_train = X_train - col_meansX
 
-		clf = skl.LinearRegression().fit(Xtrain, z_train)
+        col_means_z = np.mean(z_train, axis=0)
+        z_train = z_train - col_means_z
 
+        Xtrain = X_train  # [:,1:] #removing the first column, ie the intercept
 
-		# Model prediction, we need also to transform our data set used for the prediction.
-		ztildeTrain = Xtrain @ beta
-		X_test = X_test - col_meansX  # Use mean from training data
-		ztilde = X_test @ beta
-		ztilde = ztilde + col_means_z
-
-		zpredict_skl = clf.predict(X_test)
-		zpredict_skl += col_means_z
-
-		# The mean squared error and R2 score
-		mse_test = MSE(z_test, ztilde)
-		mse_train = MSE(z_train, ztildeTrain)
-		mse_test_sklr = MSE(z_test, zpredict_skl)
+        # train model with training data
+        # beta = (np.linalg.inv((X_train.T @ X_train)) @ X_train.T) @ z_train
+        beta = (np.linalg.pinv((Xtrain.T @ Xtrain)) @ Xtrain.T) @ z_train
 
 
-		r2 = R2(z_test, ztilde)
-		r22 = R2(z_train, ztildeTrain)
+        ##using skitlearn functions
+
+        clf = skl.LinearRegression().fit(Xtrain, z_train)
 
 
-		#MSE_values_train[i-1] = mse_train
-		#MSE_values_test[i-1] = mse_manuel
+        # Model prediction, we need also to transform our data set used for the prediction.
+        ztildeTrain = Xtrain @ beta
+        X_test = X_test - col_meansX  # Use mean from training data
+        ztilde = X_test @ beta
+        ztilde = ztilde + col_means_z
 
-		#R2_values_test[i-1] = r2
-		"""print(f"poly {i} ")
-		print(f"train mse: {mse_train} ")
-		print(f"test mse: {mse_test} ")
-		print(f"test mse sklr: {mse_test_sklr} ")
-		print(f"betas {beta}")
-		print(f"betas sklr : {clf.coef_}")"""
+        zpredict_skl = clf.predict(X_test)
+        zpredict_skl += col_means_z
 
-
-		average_mse_train[i-1] += mse_train
-		average_mse_test[i-1] += mse_test
-
-		average_R2_train[i-1] +=r22
-		average_R2_test[i-1] +=r2
+        # The mean squared error and R2 score
+        mse_test = MSE(z_test, ztilde)
+        mse_train = MSE(z_train, ztildeTrain)
+        mse_test_sklr = MSE(z_test, zpredict_skl)
 
 
-		##cathing the beta values
-		for b in range(len(beta)):
-			betas[b, i-1] += beta[b]
+        r2 = R2(z_test, ztilde)
+        r22 = R2(z_train, ztildeTrain)
+        
 
-		#maxnumberofbeta = len(beta)
-		#print(len(beta))
+        
+        print(f"polynomial degree {i}")
+        print(f"Test MSE: {mse_test}")
+        print(f"test r2: {r2}")
+
+
+
+        #MSE_values_train[i-1] = mse_train
+        #MSE_values_test[i-1] = mse_manuel
+
+        #R2_values_test[i-1] = r2
+        """print(f"poly {i} ")
+        print(f"train mse: {mse_train} ")
+        print(f"test mse: {mse_test} ")
+        print(f"test mse sklr: {mse_test_sklr} ")
+        print(f"betas {beta}")
+        print(f"betas sklr : {clf.coef_}")"""
+
+
+        average_mse_train[i-1] += mse_train
+        average_mse_test[i-1] += mse_test
+
+        average_R2_train[i-1] +=r22
+        average_R2_test[i-1] +=r2
+
+
+        ##cathing the beta values
+        for b in range(len(beta)):
+            betas[b, i-1] += beta[b]
+
+        #maxnumberofbeta = len(beta)
+        #print(len(beta))
 
 
 
@@ -210,7 +217,7 @@ axs[1].plot(poly[:], average_R2_test, label = "mean R2 test")
 axs[1].legend()
 
 for b in range(polynomial):
-	axs[2].plot(poly[:], betas[b, :]/K, label=f"B{b}")
+    axs[2].plot(poly[:], betas[b, :]/K, label=f"B{b}")
 
 
 fig.text(0.5, 0.04, 'Polynomial degree', ha='center', va='center')
@@ -221,13 +228,20 @@ plt.show()
 
 def surface_plot():
     fig = plt.figure(figsize=(10, 7))
-    ax = fig.add_subplot(111, projection='3d')
+    ax1 = fig.add_subplot(121)  # 2D plot
+    ax2 = fig.add_subplot(122, projection='3d') #3d plot
     size = 100
     xx = np.sort(np.random.uniform(0, 1, size))
     yy = np.sort(np.random.uniform(0, 1, size))
     Xgrid, Ygrid = np.meshgrid(xx, yy)
 
     ZGrid = np.zeros((size, size))
+    
+    ax1.set_title('OLS regression terrain 2D')
+    im = ax1.imshow(terrain, cmap='viridis', extent=(0, 1, 0, 1))  # Colormap
+    ax1.set_xlabel('East')
+    ax1.set_ylabel('North')
+    plt.colorbar(im, ax=ax1)
 
     for i in range(size):
         for j in range(size):
@@ -238,15 +252,15 @@ def surface_plot():
             Z = X @ beta
             ZGrid[i, j] = Z[0] + col_means_z
 
-    surf = ax.plot_surface(Xgrid, Ygrid, ZGrid, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-	#only plot the first 1000 datapoints for clarity
-    ax.scatter3D(x[:1000], y[:1000], z[:1000], color="green", label="data points")
-    fig.colorbar(surf, ax=ax, shrink=0.5, aspect=9)
-    ax.set_xlabel('East')
-    ax.set_ylabel('North')
-    ax.set_zlabel('Elevation')
-    ax.set_title(f"OLS surface degree {polynomial}")
-    ax.legend()
+    surf = ax2.plot_surface(Xgrid, Ygrid, ZGrid, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    #only plot the first 1000 datapoints for clarity
+    ax2.scatter3D(x[:1000], y[:1000], z[:1000], color="green", label="data points")
+    fig.colorbar(surf, ax=ax2, shrink=0.5, aspect=9)
+    ax2.set_xlabel('East')
+    ax2.set_ylabel('North')
+    ax2.set_zlabel('Elevation')
+    ax2.set_title("OLS regression terrain 3D")
+    ax2.legend()
     plt.show()
 
 # Call surface_plot function

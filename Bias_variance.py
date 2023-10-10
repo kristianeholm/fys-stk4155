@@ -48,8 +48,8 @@ index = np.array(index)
 index_train, index_test = train_test_split(index, test_size=0.3)
 
 
-polynomial = 9
-bootstraps = 50
+polynomial = 10
+bootstraps = 100
 
 #print(f"train index: {index_train}")
 #print(f"test index: {index_test}")
@@ -59,7 +59,7 @@ bias = np.zeros(polynomial)
 variance = np.zeros(polynomial)
 polydegree = np.zeros(polynomial)
 
-
+"""
 ##bootstrap
 
 for p in range(1, polynomial + 1):
@@ -106,7 +106,7 @@ plt.title("50 bootstraps")
 plt.legend()
 plt.show()
 
-
+"""
 
 ##cross validation
 

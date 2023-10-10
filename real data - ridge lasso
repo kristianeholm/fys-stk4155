@@ -55,7 +55,7 @@ file_path = 'C:/Users/krist/Downloads/sognsvann.tif'
 # Load the terrain
 terrain = imread(file_path)
 
-subset_size= 300
+subset_size= 250
 
 N = 1000
 m = 5 # polynomial order
