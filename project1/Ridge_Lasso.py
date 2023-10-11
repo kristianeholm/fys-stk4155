@@ -54,7 +54,7 @@ def create_X(x, y, n ):
 
 
 
-polynomial = 5
+polynomial = 10
 K = 1 #number of runnings
 
 betas = np.zeros((40, polynomial))
@@ -64,11 +64,11 @@ nlambdas = 300
 lambdas = np.logspace(-1, 1, nlambdas)
 
 
-MSE_train_lamdasXpoly_ridge = np.zeros((nlambdas, 5))
-MSE_test_lamdasXpoly_ridge = np.zeros((nlambdas, 5))
+MSE_train_lamdasXpoly_ridge = np.zeros((nlambdas, polynomial))
+MSE_test_lamdasXpoly_ridge = np.zeros((nlambdas, polynomial))
 
-MSE_train_lamdasXpoly_lasso = np.zeros((nlambdas, 5))
-MSE_test_lamdasXpoly_lasso = np.zeros((nlambdas, 5))
+MSE_train_lamdasXpoly_lasso = np.zeros((nlambdas, polynomial))
+MSE_test_lamdasXpoly_lasso = np.zeros((nlambdas, polynomial))
 
 for b in range(nlambdas):
 
@@ -120,7 +120,7 @@ for b in range(nlambdas):
 
 
 
-P, L = X,Y = np.meshgrid(np.array([1, 2, 3, 4, 5]), lambdas)
+P, L = X,Y = np.meshgrid(np.array(list(range(1,polynomial+1))), lambdas)
 
 print(np.shape(P), np.shape(L), np.shape(MSE_train_lamdasXpoly_ridge))
 
