@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.pyplot as plt
 import sklearn.linear_model as skl
+from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
@@ -154,12 +155,21 @@ for k in range(K):
         # ridge
 		beta = (np.linalg.pinv(
             (Xtrain.T @ Xtrain + (lambda_ridge * np.identity(np.shape(X)[1])))) @ Xtrain.T) @ z_train
+        # lasso
+        #(alpha=self.Lambda, max_iter=1000, normalize=False)
+		RegLasso = linear_model.Lasso(alpha=lambda_ridge, max_iter=1000000)
+        #, tol=1e-3)
+		RegLasso.fit(X_train, z_train)
+        
+		#z_predict[:, beta]       = RegLasso.predict(X_test)
 
+		mse_train = MSE(z_train, RegLasso.predict(X_train))
+		mse_test = MSE(z_test, RegLasso.predict(X_test))
 
 
 		##using skitlearn functions
 
-		#clf = skl.LinearRegression().fit(Xtrain, z_train)
+		clf = skl.LinearRegression().fit(Xtrain, z_train)
 
 
 		# Model prediction, we need also to transform our data set used for the prediction.
@@ -168,12 +178,12 @@ for k in range(K):
 		ztilde = X_test @ beta
 		ztilde = ztilde + col_means_z
 
-		#zpredict_skl = clf.predict(X_test)
-		#zpredict_skl += col_means_z
+		zpredict_skl = clf.predict(X_test)
+		zpredict_skl += col_means_z
 
 		# The mean squared error and R2 score
-		mse_test = MSE(z_test, ztilde)
-		mse_train = MSE(z_train, ztildeTrain)
+		#mse_test = MSE(z_test, ztilde)
+		#mse_train = MSE(z_train, ztildeTrain)
 		#mse_test_sklr = MSE(z_test, zpredict_skl)
 
 
@@ -188,7 +198,7 @@ for k in range(K):
 		"""print(f"poly {i} ")
 		print(f"train mse: {mse_train} ")
 		print(f"test mse: {mse_test} ")
-		print(f"test mse sklr: {                    } ")
+		print(f"test mse sklr: {mse_test_sklr} ")
 		print(f"betas {beta}")
 		print(f"betas sklr : {clf.coef_}")"""
 
@@ -221,7 +231,7 @@ fig = plt.figure()
 gs = fig.add_gridspec(3, hspace=0)
 axs = gs.subplots(sharex=True, sharey=False)
 
-fig.suptitle('Ridge model λ={}'.format(lambda_ridge))
+fig.suptitle('Lasso model λ={}'.format(lambda_ridge))
 axs[0].plot(poly[:], average_mse_train[:], label = " mean MSE train" )
 axs[0].plot(poly[:], average_mse_test[:], label = "mean MSE test" )
 axs[0].legend()
@@ -237,7 +247,7 @@ for b in range(polynomial):
 fig.text(0.5, 0.04, 'Polynomial degree', ha='center', va='center')
 plt.legend()
 
-plt.savefig("ridge_model_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K, lambda_ridge))
+plt.savefig("lasso_model_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K, lambda_ridge))
 plt.show()
 
 
@@ -285,7 +295,7 @@ def surface_plot():
 	ax.set_zlabel('franke(x, y)')
 	ax.set_title("Ridge surface degree {polynomial} ")
 	ax.legend()
-	plt.savefig("ridge_3d_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K, lambda_ridge))
+	plt.savefig("lasso_3d_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K))
 	plt.show()
 
 
