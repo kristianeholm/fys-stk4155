@@ -36,13 +36,13 @@ if len(sys.argv) < 6:
 	datapoints = 300
 	noiseSpread = 0.1
 	K = 1
-	lambda_ridge = 0.01
+	lambda_lasso = 0.01
 else:
 	polynomial = int(sys.argv[1])
 	datapoints = int(sys.argv[2])
 	noiseSpread = float(sys.argv[3])
 	K = int(sys.argv[4])
-	lambda_ridge = float(sys.argv[5])
+	lambda_lasso = float(sys.argv[5])
 
 #print('Number of runs {}'.format(K))
 
@@ -153,15 +153,20 @@ for k in range(K):
 		# beta = (np.linalg.pinv((Xtrain.T @ Xtrain)) @ Xtrain.T) @ z_train
         
         # ridge
-		beta = (np.linalg.pinv(
-            (Xtrain.T @ Xtrain + (lambda_ridge * np.identity(np.shape(X)[1])))) @ Xtrain.T) @ z_train
+		#beta = (np.linalg.pinv(
+        #    (Xtrain.T @ Xtrain + (lambda_lasso * np.identity(np.shape(X)[1])))) @ Xtrain.T) @ z_train
         # lasso
-        #(alpha=self.Lambda, max_iter=1000, normalize=False)
-		RegLasso = linear_model.Lasso(alpha=lambda_ridge, max_iter=1000000)
-        #, tol=1e-3)
+
+		RegLasso = linear_model.Lasso(alpha=lambda_lasso, max_iter=1000000)
 		RegLasso.fit(X_train, z_train)
         
-		#z_predict[:, beta]       = RegLasso.predict(X_test)
+		z_predict = np.zeros((z_test.shape[0], 1))
+        #z_predict = z_test
+        #p.zeros((z_test.shape))
+		beta = RegLasso.coef_
+        #ndarray  coef_ndarray et_params()
+		#print(beta)
+		#z_predict[:, beta] = RegLasso.predict(X_test)
 
 		mse_train = MSE(z_train, RegLasso.predict(X_train))
 		mse_test = MSE(z_test, RegLasso.predict(X_test))
@@ -231,7 +236,7 @@ fig = plt.figure()
 gs = fig.add_gridspec(3, hspace=0)
 axs = gs.subplots(sharex=True, sharey=False)
 
-fig.suptitle('Lasso model λ={}'.format(lambda_ridge))
+fig.suptitle('Lasso model λ={}'.format(lambda_lasso))
 axs[0].plot(poly[:], average_mse_train[:], label = " mean MSE train" )
 axs[0].plot(poly[:], average_mse_test[:], label = "mean MSE test" )
 axs[0].legend()
@@ -247,7 +252,7 @@ for b in range(polynomial):
 fig.text(0.5, 0.04, 'Polynomial degree', ha='center', va='center')
 plt.legend()
 
-plt.savefig("lasso_model_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K, lambda_ridge))
+plt.savefig("lasso_model_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K, lambda_lasso))
 plt.show()
 
 
@@ -295,7 +300,7 @@ def surface_plot():
 	ax.set_zlabel('franke(x, y)')
 	ax.set_title("Ridge surface degree {polynomial} ")
 	ax.legend()
-	plt.savefig("lasso_3d_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K))
+	plt.savefig("lasso_3d_{}_{}_{}_lambda{}.pdf".format(polynomial, datapoints, K, lambda_lasso))
 	plt.show()
 
 
