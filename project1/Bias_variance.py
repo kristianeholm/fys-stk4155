@@ -11,7 +11,6 @@ from matplotlib.ticker import LinearLocator
 from sklearn.utils import resample
 from sklearn import linear_model
 
-
 def FrankeFunction(x,y):
 	term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
 	term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
@@ -37,7 +36,7 @@ def create_X(x, y, n ):
 
 
 
-datapoints = 200
+datapoints = 300
 x = np.random.uniform(0, 1, datapoints)
 y = np.random.uniform(0, 1, datapoints)
 
@@ -62,6 +61,7 @@ error = np.zeros(polynomial)
 bias = np.zeros(polynomial)
 variance = np.zeros(polynomial)
 polydegree = np.zeros(polynomial)
+
 
 
 for p in range(1, polynomial + 1):
@@ -92,6 +92,8 @@ for p in range(1, polynomial + 1):
 		mse[i] = mean_squared_error(z[index_test], y_pred[:, i] )
 
 
+
+
 	error[p-1] = np.mean(mse)
 	bias[p-1] = np.mean((z[index_test] - np.mean(y_pred, axis=1, keepdims=True)) ** 2)
 
@@ -110,7 +112,7 @@ plt.show()
 
 
 
-
+"""
 ##cross validation
 
 from sklearn.model_selection import cross_val_score
@@ -219,7 +221,7 @@ for p in range(1, polynomial + 1):
 		##for lasso, comment out the ridge
 
 
-		"""should only have 1 of the belows"""
+		#should only have 1 of the belows
 		# ridge
 		beta_ridge = (np.linalg.pinv(
 			(X.T @ X + (lamda * np.identity(np.shape(X)[1])))) @ X.T) @ ztrain
@@ -273,3 +275,4 @@ plt.title(f"{k}-fold cross validation, Ridge l = {lamda}")
 plt.legend()
 plt.show()
 
+"""

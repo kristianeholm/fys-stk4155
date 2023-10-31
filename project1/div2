@@ -39,24 +39,24 @@ file_path = 'C:/Users/krist/Downloads/sognsvann.tif'
 # Load the terrain
 terrain = imread(file_path)
 
-#subset_size= 250
+subset_size= 250
 
-N = 250
+N = 500
 m = 5 # polynomial order
 terrain = terrain[:N,:N]
 
-#subset = terrain[:subset_size, :subset_size]
+subset = terrain[:subset_size, :subset_size]
 
 #create mesh of image pixels
 #x = np.linspace(0,1,np.shape(terrain)[0])
 #y = np.linspace(0, 1, np.shape(terrain)[1])
-x = np.linspace(0, 1, terrain)
-y = np.linspace(0, 1, terrain)
+x = np.linspace(0, 1, subset_size)
+y = np.linspace(0, 1, subset_size)
 x_mesh, y_mesh = np.meshgrid(x,y)
 
-z = terrain[:N, :N].flatten()
-X = create_X(x_mesh,y_mesh, m)[:N*N, :]
-#X = create_X(x_mesh, y_mesh, m)[:subset_size * subset_size, :]
+z = subset[:N, :N].flatten()
+#X = create_X(x_mesh,y_mesh, m)[:N*N, :]
+X = create_X(x_mesh, y_mesh, m)[:subset_size * subset_size, :]
 
 
 polynomial = 5
@@ -99,8 +99,6 @@ for b in range(nlambdas):
         # instead of splitting x and y data seperatly, we seperate the design matrix
         X_train, X_test, z_train, z_test = train_test_split(X, z, test_size=0.2)
 
-
-
         ##scaling
         # average of each column
         col_meansX = np.mean(X_train, axis=0)
@@ -108,7 +106,6 @@ for b in range(nlambdas):
 
         col_means_z = np.mean(z_train, axis=0)
         z_train = z_train - col_means_z
-    
 
         Xtrain = X_train  # [:,1:] #removing the first column, ie the intercept
 
@@ -146,50 +143,51 @@ for b in range(nlambdas):
 
 
 P, L = X,Y = np.meshgrid(np.array([1, 2, 3, 4, 5]), lambdas)
+#P, L = np.meshgrid(np.arange(1, 11), lambdas)
+#P, L = np.meshgrid(np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), lambdas)
 
-print(np.shape(P), np.shape(L), np.shape(MSE_train_lamdasXpoly_ridge))
+#print(np.shape(P), np.shape(L), np.shape(MSE_train_lamdasXpoly_ridge))
 
-fig = plt.figure(figsize=(5, 3.5))
+# Plot MSE values for Ridge testing
+fig = plt.figure(figsize=(8, 6))
 ax = fig.add_subplot(111, projection='3d')
-surf = ax.plot_surface(P, L, MSE_train_lamdasXpoly_ridge, rstride=1, cstride=1,cmap='viridis', edgecolor='none')
-fig.colorbar(surf, ax=ax, shrink=0.5,aspect=9)
-ax.set_title(' Ridge train error');
-ax.set_xlabel('poly degree')
-ax.set_ylabel('lambda')
-ax.set_zlabel('MSE Ridge');
+surf = ax.plot_surface(P, L, MSE_test_lamdasXpoly_ridge.T, cmap='viridis')
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=9)
+ax.set_title('Ridge Test Error (MSE)')
+ax.set_xlabel('Polynomial Degree')
+ax.set_ylabel('Lambda')
+ax.set_zlabel('MSE Ridge Test')
 plt.show()
 
-
-fig = plt.figure(figsize=(5, 3.5))
-ax = plt.axes(projection='3d')
-ax.plot_surface(P, L, MSE_test_lamdasXpoly_ridge, rstride=1, cstride=1,cmap='viridis', edgecolor='none')
-
-fig.colorbar(surf, ax=ax,shrink=0.5,aspect=9)
-ax.set_title('Ridge test error');
-ax.set_xlabel('poly degree')
-ax.set_ylabel('lambda')
-ax.set_zlabel('MSE Ridge');
-
+# Plot R2 scores for Ridge testing
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(111, projection='3d')
+surf = ax.plot_surface(P, L, R2_test_lamdasXpoly_ridge.T, cmap='viridis')
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=9)
+ax.set_title('Ridge Test R2 Score')
+ax.set_xlabel('Polynomial Degree')
+ax.set_ylabel('Lambda')
+ax.set_zlabel('R2 Score Ridge Test')
 plt.show()
 
-
-#lasso plot
-#training
-im = plt.pcolormesh(P, L, MSE_train_lamdasXpoly_lasso)  # drawing the function
-plt.xlabel("polynomial")
-plt.ylabel("lambda")
-# adding the Contour lines with labels
-plt.colorbar(im)  # adding the colobar on the right
-# latex fashion title
-plt.title("MSE lasso train")
-plt.show()
-#test
-im = plt.pcolormesh(P, L, MSE_test_lamdasXpoly_lasso)
-plt.xlabel("polynomial")
-plt.ylabel("lambda")
-plt.colorbar(im)
-plt.title("MSE Lasso test")
+# Plot MSE values for Lasso testing
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(111, projection='3d')
+surf = ax.plot_surface(P, L, MSE_test_lamdasXpoly_lasso.T, cmap='viridis')
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=9)
+ax.set_title('Lasso Test Error (MSE)')
+ax.set_xlabel('Polynomial Degree')
+ax.set_ylabel('Lambda')
+ax.set_zlabel('MSE Lasso Test')
 plt.show()
 
-
-
+# Plot R2 scores for Lasso testing
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(111, projection='3d')
+surf = ax.plot_surface(P, L, R2_test_lamdasXpoly_lasso.T, cmap='viridis')
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=9)
+ax.set_title('Lasso Test R2 Score')
+ax.set_xlabel('Polynomial Degree')
+ax.set_ylabel('Lambda')
+ax.set_zlabel('R2 Score Lasso Test')
+plt.show()

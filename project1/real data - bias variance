@@ -1,4 +1,5 @@
 import numpy as np
+from imageio.v2 import imread
 from sklearn.model_selection import  train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, Normalizer
 import matplotlib.pyplot as plt
@@ -10,8 +11,6 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator
 from sklearn.utils import resample
 from sklearn import linear_model
-from imageio.v2 import imread
-
 
 def create_X(x, y, n ):
 	if len(x.shape) > 1:
@@ -29,17 +28,12 @@ def create_X(x, y, n ):
 
 	return X
 
-
-##cross validation
-
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import KFold
-
+#path to the TIFF file
 file_path = 'C:/Users/krist/Downloads/sognsvann.tif'
 # Load the terrain
 terrain = imread(file_path)
 
-N = 1000
+N = 250
 m = 10 # polynomial order
 terrain = terrain[:N,:N]
 
@@ -47,13 +41,94 @@ terrain = terrain[:N,:N]
 x = np.linspace(0,1,np.shape(terrain)[0])
 y = np.linspace(0, 1, np.shape(terrain)[1])
 x_mesh, y_mesh = np.meshgrid(x,y)
-
 z = terrain.flatten()
-X = create_X(x_mesh,y_mesh, m)
 
-polynomial=10
+X = create_X(x_mesh,y_mesh, 2)
+print(np.shape(z), np.shape(x) , np.shape(X))
+
+
+
+index = list(range(len(z)))
+index = np.array(index)
+index_train, index_test = train_test_split(index, test_size=0.3)
+#index_train = np.array([index_train])
+#index_test = np.array([index_test])
+print(np.shape(index), np.shape(index_train), np.shape(index_test))
+
+polynomial = 10
+
+
+
+"""#bootstrap OLS
+
+bootstraps = 10
+
+error = np.zeros(polynomial)
+bias = np.zeros(polynomial)
+variance = np.zeros(polynomial)
+polydegree = np.zeros(polynomial)
+
+
+for p in range(1, polynomial + 1):
+
+	y_pred = np.empty((len(index_test), bootstraps))
+	X = create_X(x_mesh, y_mesh, p)
+
+	for i in range(bootstraps):
+
+		#print(f"b {i}, p {p}")
+		resample_indcies = resample(index_train, n_samples = int(len(index_train)*0.6) )
+
+		#print(f"resample indecies: {np.shape((resample_indcies))}")
+		#print(f"shape of design matrix : {np.shape(X)}")
+		#instead just split the design matrix
+
+		#x_, y_ = x[resample_indcies], y[resample_indcies]
+		#x_mesh, y_mesh = np.meshgrid(x_, y_)
+		#X = create_X(x_mesh,y_mesh, p)
+		Xtrain = X[resample_indcies][:]
+
+		#x_mesh_, y_mesh_ = np.meshgrid(x[index_test], y[index_test])
+		#Xtest = create_X(x_mesh_, y_mesh_, p)  ##only depends on i
+		Xtest = X[index_test][:]
+
+
+		clf = skl.LinearRegression().fit(Xtrain, z[resample_indcies])
+		z_pred = clf.predict(Xtest)
+		#print(f"predicted z: {z_pred}")
+
+		y_pred[:, i] = z_pred
+
+
+	#error[p] = np.mean(np.mean((z[index_test] - y_pred) ** 2, axis=1, keepdims=True))
+	mse = np.zeros(bootstraps)
+	for i in range(bootstraps):
+		mse[i] = mean_squared_error(z[index_test], y_pred[:, i] )
+
+
+	error[p-1] = np.mean(mse)
+	bias[p-1] = np.mean((z[index_test] - np.mean(y_pred, axis=1, keepdims=True)) ** 2)
+
+	variance[p-1] = np.mean(np.var(y_pred, axis=1, keepdims=True))
+	polydegree[p-1] = p
+
+plt.plot(polydegree, error, label='Error')
+plt.plot(polydegree, bias, label='bias')
+plt.plot(polydegree, variance, label='Variance')
+#plt.plot(polydegree, variance + bias, label='Bias + Variance')
+plt.xlabel("polynomial degree")
+plt.ylabel("")
+plt.title(f"{bootstraps} bootstraps")
+plt.legend()
+plt.show()
 
 """
+"""
+##cross validation OLS
+
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+
 k = 5
 kfold = KFold(n_splits = k)
 
@@ -66,32 +141,28 @@ bias = np.zeros(polynomial)
 variance = np.zeros(polynomial)
 polydegree = np.zeros(polynomial)
 
-
-#OLS
-
 for p in range(1, polynomial + 1):
 	j = 0
-	y_pred = np.empty((int(len(x)/k), k))
 
-	for train_inds, test_inds in kfold.split(x):
+	y_pred =  np.empty((int(len(z)/k), k))
 
-		xtrain = x[train_inds]
-		ytrain = y[train_inds]
+	X = create_X(x_mesh, y_mesh, p)
+	##scaling
 
-		#create design matrix
-		X = create_X(xtrain, ytrain, p)
+
+
+	for train_inds, test_inds in kfold.split(z):
+
+		Xtrain = X[train_inds][:]
+		Xtest = X[test_inds][:]
 
 		ztrain = z[train_inds]
 
-		clf = skl.LinearRegression().fit(X, ztrain)
 
-		xtest = x[test_inds]
-		ytest = y[test_inds]
-		#create test design matrix
-		Xtest= create_X(xtest, ytest, p)
+		clf = skl.LinearRegression().fit(Xtrain, ztrain)
+
 
 		ztest = z[test_inds]
-
 		z_pred = clf.predict(Xtest)
 
 		y_pred[:, j] = z_pred
@@ -105,125 +176,80 @@ for p in range(1, polynomial + 1):
 
 
 	error[p-1] = np.mean(mse)
-	bias[p-1] = np.mean((ztest - np.mean(y_pred, axis=1, keepdims=True)) ** 2)
+	bias[p-1] = np.mean((z[index_test] - np.mean(y_pred, axis=1, keepdims=True)) ** 2)
 	variance[p-1] = np.mean(np.var(y_pred, axis=1, keepdims=True))
 	polydegree[p-1] = p
-	
+
+
 plt.plot(polydegree, error, label='Error')
 plt.plot(polydegree, bias, label='bias')
 plt.plot(polydegree, variance, label='Variance')
 plt.plot(polydegree, variance + bias, label='Bias + Variance')
 plt.xlabel("polynomial degree")
 plt.ylabel("")
-plt.title(f"{k}-fold cross validation of OLS on real terrain data")
+plt.title(f"{k}-fold cross validation OLS on real data")
 plt.legend()
-#plt.show()
-
-# Perform OLS on the entire dataset
-X_ols = create_X(x_mesh, y_mesh, polynomial)
-clf_ols = skl.LinearRegression().fit(X_ols, z)
-z_ols = clf_ols.predict(X_ols)
-
-# Calculate MSE and R-squared for the OLS result
-mse_ols = mean_squared_error(z, z_ols)
-r2_ols = clf_ols.score(X_ols, z)
-
-print(f"Mean Squared Error (MSE) for OLS: {mse_ols:.4f}")
-print(f"R-squared (R2) for OLS: {r2_ols:.4f}")
-
-# 2D plot of the terrain after OLS and cross-validation
-plt.figure(figsize=(8, 6))
-plt.imshow(z_ols.reshape(N, N), cmap='viridis', extent=(0, 1, 0, 1))
-plt.title("Terrain 2D Plot (OLS and Cross-Validation Result)")
-plt.xlabel('East')
-plt.ylabel('North')
-plt.colorbar()
 plt.show()
-
-# 3D plot of the terrain after OLS and cross-validation
-fig = plt.figure(figsize=(10, 7))
-ax = fig.add_subplot(111, projection='3d')
-Xgrid, Ygrid = np.meshgrid(x, y)
-ZGrid = z_ols.reshape(N, N)
-
-surf = ax.plot_surface(Xgrid, Ygrid, ZGrid, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-ax.set_xlabel('East')
-ax.set_ylabel('North')
-ax.set_zlabel('Elevation')
-ax.set_title("Terrain 3D Plot (OLS and Cross-Validation Result)")
-plt.colorbar(surf, ax=ax, shrink=0.5, aspect=9)
-plt.show()
-
-
 
 
 """
+## cross validation bias viariance ridge and lasso
 
-##bias viariance cross variance ridge and lasso
 
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
 
 k = 5
 kfold = KFold(n_splits = k)
 
 # Perform the cross-validation to estimate MSE
 scores_KFold = np.zeros((polynomial, k))
-
-
+lmb = 1
 
 error = np.zeros(polynomial)
 bias = np.zeros(polynomial)
 variance = np.zeros(polynomial)
 polydegree = np.zeros(polynomial)
-lamda = 0.00001
 
 for p in range(1, polynomial + 1):
 	j = 0
-	y_pred = np.empty((int(len(x)/k), k))
 
-	for train_inds, test_inds in kfold.split(x):
+	y_pred =  np.empty((int(len(z)/k), k))
 
-		xtrain = x[train_inds]
-		ytrain = y[train_inds]
+	X = create_X(x_mesh, y_mesh, p)
+	##scaling
 
-		#create design matrix
-		X_train = create_X(xtrain, ytrain, p)
+
+
+	for train_inds, test_inds in kfold.split(z):
+
+		Xtrain = X[train_inds][:]
+		Xtest = X[test_inds][:]
+
 		ztrain = z[train_inds]
 
-		clf = skl.LinearRegression().fit(X, ztrain)
 
+		#ridge
+		#RegRidge = linear_model.Ridge(lmb, fit_intercept=False)
+		#RegRidge.fit(Xtrain, ztrain)
 
-		##ridge and lasso only differ with few lines, for ridge calculation comment out the lasso,
-		##for lasso, comment out the ridge
-
-
-		#should only have 1 of the belows
-
-		# ridge
-		beta_ridge = (np.linalg.pinv(
-			(X_train.T @ X_train + (lamda * np.identity(np.shape(X_train)[1])))) @ X_train.T) @ ztrain
-
-		ztildeTrain = X_train @ beta_ridge
-
-
-		##lasso,
-		#RegLasso = linear_model.Lasso(lamda)
-		#clf = RegLasso.fit(X, ztrain)
-
-
-
-		#this part is same for both
-		xtest = x[test_inds]
-		ytest = y[test_inds]
-		#create test design matrix
-		Xtest= create_X(xtest, ytest, p)
 		ztest = z[test_inds]
 
+		#ytildeRidge = RegRidge.predict(Xtrain)
+		#ypredictRidge = RegRidge.predict(Xtest)
 
-		##only have one of these, the other should be commented out
-		z_pred = Xtest @ beta_ridge #ridge
-		#z_pred = clf.predict(Xtest) #lasso
+		#z_pred = RegRidge.predict(Xtest)
 
-		y_pred[:, j] = z_pred
+
+		#lasso, comment out
+		RegLasso = skl.Lasso(alpha=lmb, max_iter=10000)
+		#RegLasso = linear_model.Lasso(lmb)
+		RegLasso.fit(Xtrain, ztrain)
+		ypredictLasso = RegLasso.predict(Xtest)
+
+
+		#y_pred[:, j] = z_pred
+		y_pred[:, j] = ypredictLasso
 
 		j += 1
 
@@ -234,10 +260,9 @@ for p in range(1, polynomial + 1):
 
 
 	error[p-1] = np.mean(mse)
-	bias[p-1] = np.mean((ztest - np.mean(y_pred, axis=1, keepdims=True)) ** 2)
+	bias[p-1] = np.mean((z[index_test] - np.mean(y_pred, axis=1, keepdims=True)) ** 2)
 	variance[p-1] = np.mean(np.var(y_pred, axis=1, keepdims=True))
 	polydegree[p-1] = p
-
 
 
 plt.plot(polydegree, error, label='Error')
@@ -246,9 +271,8 @@ plt.plot(polydegree, variance, label='Variance')
 plt.plot(polydegree, variance + bias, label='Bias + Variance')
 plt.xlabel("polynomial degree")
 plt.ylabel("")
-plt.title(f"{k}-fold cross validation, Ridge l = {lamda}")
-#plt.title(f"{k}-fold cross validation, Lasso l = {lamda}")
+#plt.title(f" Ridge {k}-fold cross validation on real data, lmb = {lmb}")
+plt.title(f" lasso {k}-fold cross validation on real data lmb = {lmb}")
 plt.legend()
 plt.show()
 
-#"""
