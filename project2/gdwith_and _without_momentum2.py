@@ -19,7 +19,7 @@ n = 200
 x = 2*np.random.rand(n,1)
 y = 4 + 3*x + 2*x**2 + np.random.randn(n,1) #f(x)=a_0+a_1x+a_2x^2
 
-X = np.c_[np.ones((n,1)), x, x**2] #need a new column with the X values squared
+X = np.c_[np.ones((n,1)), x, x**2] #need a nWhatew column with the X values squared
 
 
 beta_linreg = np.linalg.inv(X.T @ X) @ X.T @ y
