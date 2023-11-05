@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.utils import shuffle
 
 from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
-from metrics import MSE, R2
+from metrics import MSE, R2, accuracy, cross_entropy
 
 class NeuralNetwork:
 #Credits to https://github.com/CompPhysics/MachineLearning/blob/master/doc/LectureNotes/week41.ipynb from which this class reuses some code.
@@ -118,7 +118,7 @@ class NeuralNetwork:
             self.biases[current_layer] = self.biases[current_layer] - self.learning_rate*np.sum(error, axis=0)
             current_layer += 1
         
-    def train(self, data, target, data_val=None, target_val=None): 
+    def train(self, data, target, data_val=None, target_val=None, loss='MSE'): 
         minibatches = 1
         n = len(data)
         batch_size = int(n/minibatches)
@@ -137,10 +137,22 @@ class NeuralNetwork:
             self.update_weights()
             
             target_pred_val = self.predict(data_val)
-            val_loss = MSE(target_pred_val, target_val)
+            if loss == 'MSE':
+                val_loss = MSE(target_pred_val, target_val)
+            elif loss == 'R2':
+                val_loss = R2(target_pred_val, target_val)
+            elif loss == 'accuracy':
+                val_loss = accuracy(target_pred_val, target_val)
+            elif loss == 'logistic':
+                val_loss = cross_entropy(target_pred_val, target_val)
                 
             target_pred_train = self.predict(data)
-            train_loss = MSE(target_pred_train, target)
+            if loss == 'MSE':
+                train_loss = MSE(target_pred_train, target)
+            elif loss == 'R2':
+                train_loss = R2(target_pred_train, target)
+            elif loss == 'accuracy':
+                train_loss = accuracy(target_pred_train, target)                                                            
             
             self.loss_val.append(val_loss)
             self.loss_train.append(train_loss)

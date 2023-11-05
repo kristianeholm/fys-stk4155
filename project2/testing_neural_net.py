@@ -47,7 +47,7 @@ network.add_layer(30)
 network.add_layer(30) 
 network.add_layer(1)    
      
-network.train(X_train_scaled, y_train, data_val=X_val_scaled, target_val=y_val) 
+network.train(X_train_scaled, y_train, data_val=X_val_scaled, target_val=y_val, loss='MSE') 
 
 test_pred = network.predict(X_test_scaled)
 
