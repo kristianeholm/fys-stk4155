@@ -1,100 +1,159 @@
+import numpy as np
+from sklearn.utils import shuffle
+
+from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
+from metrics import MSE, R2
+
 class NeuralNetwork:
 #Credits to https://github.com/CompPhysics/MachineLearning/blob/master/doc/LectureNotes/week41.ipynb from which this class reuses some code.
     def __init__(
             self,
-            X_data,
-            Y_data,
-            n_hidden_neurons=50,
-            n_categories=10,
+            num_features, 
+            regr_or_class='regr', 
+            activation = 'sigmoid',
+            #X_data,
+            #Y_data,
+            #n_hidden_neurons=50,
+            #n_categories=10,
             epochs=10,
-            batch_size=100,
+            minibatches=5,
             eta=0.1,
             lmbd=0.0):
 
-        self.X_data_full = X_data
-        self.Y_data_full = Y_data
+#        self.X_data_full = X_data
+#        self.Y_data_full = Y_data
 
-        self.n_inputs = X_data.shape[0]
-        self.n_features = X_data.shape[1]
-        self.n_hidden_neurons = n_hidden_neurons
-        self.n_categories = n_categories
+#        self.n_inputs = X_data.shape[0]
+#        self.n_features = X_data.shape[1]
+#        self.n_hidden_neurons = n_hidden_neurons
+#        self.n_categories = n_categories
 
         self.epochs = epochs
-        self.batch_size = batch_size
-        self.iterations = self.n_inputs // self.batch_size
-        self.eta = eta
+        self.minibatches = minibatches
+#        self.iterations = self.n_inputs // self.batch_size
+        self.learning_rate = eta
         self.lmbd = lmbd
-
-        self.create_biases_and_weights()
-
-    def create_biases_and_weights(self):
-        self.hidden_weights = np.random.randn(self.n_features, self.n_hidden_neurons)
-        self.hidden_bias = np.zeros(self.n_hidden_neurons) + 0.01
-
-        self.output_weights = np.random.randn(self.n_hidden_neurons, self.n_categories)
-        self.output_bias = np.zeros(self.n_categories) + 0.01
-
-    def feed_forward(self):
-        # feed-forward for training
-        self.z_h = np.matmul(self.X_data, self.hidden_weights) + self.hidden_bias
-        self.a_h = sigmoid(self.z_h)
-
-        self.z_o = np.matmul(self.a_h, self.output_weights) + self.output_bias
-
-        exp_term = np.exp(self.z_o)
-        self.probabilities = exp_term / np.sum(exp_term, axis=1, keepdims=True)
-
-    def feed_forward_out(self, X):
-        # feed-forward for output
-        z_h = np.matmul(X, self.hidden_weights) + self.hidden_bias
-        a_h = sigmoid(z_h)
-
-        z_o = np.matmul(a_h, self.output_weights) + self.output_bias
         
-        exp_term = np.exp(z_o)
-        probabilities = exp_term / np.sum(exp_term, axis=1, keepdims=True)
-        return probabilities
+        self.num_features = num_features
+        self.weights = {}
+        self.biases = {}
+        self.activations = {}
+        self.errors = {}
+        self.learning_type = regr_or_class
+        if activation == 'sigmoid':
+            self.activation_function = sigmoid
+            self.activation_prime = sigmoid_derivative
+        elif activation == 'relu':
+            self.activation_function = relu
+            self.activation_prime = relu_derivative
+        elif activation == 'leakyrelu':
+            self.activation_function = relu_leaky
+            self.activation_prime = relu_leaky_derivative
 
-    def backpropagation(self):
-        error_output = self.probabilities - self.Y_data
-        error_hidden = np.matmul(error_output, self.output_weights.T) * self.a_h * (1 - self.a_h)
+    def initialize_weights(self, size_layer, size_prev_layer):
+        return np.random.randn(size_prev_layer, size_layer) 
+    
+    def initialize_bias(self, size_layer):
+        return np.random.rand(size_layer)
+        
+    def add_layer(self, size_layer):
+        if len(self.weights) == 0:
+            self.weights[0] = self.initialize_weights(size_layer, self.num_features)
+            self.biases[0] = self.initialize_bias(size_layer)
+        else:
+            counter = len(self.weights)
+            size_prev_layer = self.weights[counter - 1].shape[1]
+            self.weights[counter] = self.initialize_weights(size_layer, size_prev_layer)
+            self.biases[counter] = self.initialize_bias(size_layer)
+            
+    def compute_z(self, current_layer):
+        weights = self.weights.get(current_layer)
+        bias = self.biases.get(current_layer)
+        inputs = self.activations.get(current_layer)
+        z = inputs @ weights + bias
+        return z
+            
+    def feed_forward(self):
+        current_layer = 0
+        num_layers = len(self.weights)
+        while current_layer < num_layers:
+            z = self.compute_z(current_layer)
+            if current_layer == num_layers - 1:
+                if self.learning_type == 'class':
+                    a = sigmoid(z)
+                else:
+                    a = z
+            else:
+                a = self.activation_function(z)
+            current_layer += 1
+            self.activations[current_layer] = a
 
-        self.output_weights_gradient = np.matmul(self.a_h.T, error_output)
-        self.output_bias_gradient = np.sum(error_output, axis=0)
-
-        self.hidden_weights_gradient = np.matmul(self.X_data.T, error_hidden)
-        self.hidden_bias_gradient = np.sum(error_hidden, axis=0)
-
-        if self.lmbd > 0.0:
-            self.output_weights_gradient += self.lmbd * self.output_weights
-            self.hidden_weights_gradient += self.lmbd * self.hidden_weights
-
-        self.output_weights -= self.eta * self.output_weights_gradient
-        self.output_bias -= self.eta * self.output_bias_gradient
-        self.hidden_weights -= self.eta * self.hidden_weights_gradient
-        self.hidden_bias -= self.eta * self.hidden_bias_gradient
-
-    def predict(self, X):
-        probabilities = self.feed_forward_out(X)
-        return np.argmax(probabilities, axis=1)
-
-    def predict_probabilities(self, X):
-        probabilities = self.feed_forward_out(X)
-        return probabilities
-
-    def train(self):
-        data_indices = np.arange(self.n_inputs)
-
+    def backpropagation(self, y):
+        current_layer = len(self.weights)
+        a = self.activations.get(current_layer).ravel()
+        C_deriv = (a - y).reshape(-1, 1)
+        z = self.compute_z(current_layer-1)
+        if self.learning_type == 'regr':
+            activation_deriv = np.ones((len(z), 1))
+        elif self.learning_type == 'class':
+            activation_deriv = sigmoid_derivative(z)
+        output_error = C_deriv * activation_deriv
+        self.errors[current_layer] = output_error
+        current_layer -= 1
+        while current_layer > 0:
+            error_prev = self.errors[current_layer + 1]
+            weights = self.weights[current_layer]
+            z = self.compute_z(current_layer-1)
+            activation_deriv = self.activation_prime(z)
+            error = np.dot(error_prev, weights.T) * activation_deriv
+            self.errors[current_layer] = error
+            current_layer -= 1
+            
+    def update_weights(self):
+        current_layer = 0
+        while current_layer < len(self.weights):
+            activations = self.activations[current_layer]
+            error = self.errors[current_layer + 1]
+            self.weights[current_layer] = (1-self.learning_rate*self.lmbd/len(activations))*self.weights[current_layer] - self.learning_rate*np.dot(activations.T, error)
+            self.biases[current_layer] = self.biases[current_layer] - self.learning_rate*np.sum(error, axis=0)
+            current_layer += 1
+        
+    def train(self, data, target, data_val=None, target_val=None): 
+        minibatches = 1
+        n = len(data)
+        batch_size = int(n/minibatches)
+        
+        self.loss_train = []
+        self.loss_val = []
+        
         for i in range(self.epochs):
-            for j in range(self.iterations):
-                # pick datapoints with replacement
-                chosen_datapoints = np.random.choice(
-                    data_indices, size=self.batch_size, replace=False
-                )
+            data_shuffle, target_shuffle = shuffle(data, target)
+            batch_chosen = np.random.randint(0, minibatches)
+            data_minibatch = data_shuffle[batch_chosen:batch_chosen+batch_size]
+            target_minibatch = target_shuffle[batch_chosen:batch_chosen+batch_size]
+            self.activations[0] = data_minibatch
+            self.feed_forward()
+            self.backpropagation(target_minibatch)
+            self.update_weights()
+            
+            target_pred_val = self.predict(data_val)
+            val_loss = MSE(target_pred_val, target_val)
+                
+            target_pred_train = self.predict(data)
+            train_loss = MSE(target_pred_train, target)
+            
+            self.loss_val.append(val_loss)
+            self.loss_train.append(train_loss)
 
-                # minibatch training data
-                self.X_data = self.X_data_full[chosen_datapoints]
-                self.Y_data = self.Y_data_full[chosen_datapoints]
-
-                self.feed_forward()
-                self.backpropagation()
+    def predict(self, x):
+        self.activations[0] = x
+        self.feed_forward()
+        preds = self.activations[len(self.activations) - 1].ravel()
+        if self.learning_type == 'class':
+            return np.where(preds >= 0.5, 1, 0)
+        return preds
+        
+    def predict_probabilities(self, x):
+        self.feed_forward(x)
+        preds = self.activations[len(self.activations) - 1]
+        return preds
