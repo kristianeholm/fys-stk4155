@@ -57,6 +57,7 @@ ypredict_sgd = Xnew @ theta_sgd
 # Calculate MSE for the method
 mse_sgd = MSE(y[-2:], ypredict_sgd)
 
+#plotting
 plt.plot(xnew, ypredict_sgd, "b-", label=f"SGD Ridge Regression (MSE: {mse_sgd:.2f}")
 
 plt.xlabel(r'$x$')

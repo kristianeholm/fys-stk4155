@@ -24,28 +24,39 @@ theta_linreg = np.linalg.inv(X.T @ X) @ X.T @ y
 n_epochs = 50
 minibatch_size = 20
 
-t0, t1 = 45, 150  # learning schedule parameters
+t0, t1 = 5, 50  # learning schedule parameters
 
 # learning schedule function
 def learning_schedule(t):
     return t0 / (t + t1)
 
-# Initialization of Theta for SGD with and without momentum
-theta_sgd = np.random.randn(3,1) #without
-theta_momentum = np.random.randn(3,1) #with 
 
-# SGD without momentum
+# Initialization of Theta for SGD with and without momentum
+theta_sgd = np.random.randn(3,1)
+theta_momentum = np.random.randn(3,1)
+
+#adagrad parameters
+delta = 1e-8
+
+G= np.zeros(theta_sgd.shape)
+G_momentum = np.zeros(theta_momentum.shape)
+
+# SGD without momentum + adagrad
 for epoch in range(n_epochs):
     for i in range(n // minibatch_size):
         random_index = np.random.randint(n)
         xi = X[random_index:random_index+minibatch_size]
         yi = y[random_index:random_index+minibatch_size]
         gradients = 2/minibatch_size * xi.T @ (xi @ theta_sgd - yi)
-        eta = learning_schedule(epoch * n//minibatch_size + i) #eta from learning schedule
+
+        G += gradients**2
+        eta = learning_schedule(epoch * n//minibatch_size + i)
+        eta_adjusted = eta / (delta + np.sqrt(G)) #update eta with adagrad
+
         theta_sgd = theta_sgd - eta * gradients
 
 
-# velocity for SGD with momentum
+#velocity for SGD with momentum
 velocity = np.zeros((3,1))
 mu = 0.3  # momentum
 
@@ -56,9 +67,14 @@ for epoch in range(n_epochs):
         xi = X[random_index:random_index+minibatch_size]
         yi = y[random_index:random_index+minibatch_size]
         gradients = 2/minibatch_size * xi.T @ (xi @ theta_momentum - yi)
-        eta = learning_schedule(epoch * n//minibatch_size + i) #eta from learning schedule
-        velocity = mu * velocity + eta * gradients
+
+        G_momentum += gradients**2
+        eta = learning_schedule(epoch * n//minibatch_size + i)
+        eta_adjusted = eta / (delta + np.sqrt(G_momentum)) #update eta with adagrad
+        velocity = mu * velocity + eta_adjusted * gradients
         theta_momentum = theta_momentum - velocity
+
+
 
 # New data
 xnew = np.array([[0],[2]])
@@ -78,6 +94,6 @@ plt.plot(xnew, ypredict_momentum, "g-", label=f"SGD With Momentum (MSE: {mse_mom
 
 plt.xlabel(r'$x$')
 plt.ylabel(r'$y$')
-plt.title(r'SGD methods')
+plt.title(r'SGD with adagrad')
 plt.legend()
 plt.show()
