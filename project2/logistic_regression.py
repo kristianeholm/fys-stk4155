@@ -1,4 +1,4 @@
-#logistic regression 
+#logistic regression (without scikit learn)
 import autograd.numpy as np
 from autograd import grad
 import pandas as pd
@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from metrics import accuracy
+
+np.random.seed(0)
 
 #Cross- entropy cost function
 def CostCrossEntropy(target):
@@ -14,7 +17,7 @@ def CostCrossEntropy(target):
 
     return func
 
-#design matrix
+#Function for making the design matrix
 def create_design_matrix(x, polynomial_degree=1):
     X = pd.DataFrame()
     for i in range(1, polynomial_degree + 1):
@@ -39,7 +42,7 @@ def training_loss(weights):
 
 #stohastic gradient decent (from sgd and ridge from earlier)
 #n_epochs = number of epochs, lmbda = lambda = regularization parameter, eta = learning rate (step size)
-def sgd(X, y, n_epochs=50, minibatch_size=20, lmbda=0.001, eta=0.01):
+def sgd(X, y, n_epochs, minibatch_size, lmbda, eta):
     n, p = X.shape
     theta_sgd = np.random.randn(p, 1)
 
@@ -51,12 +54,16 @@ def sgd(X, y, n_epochs=50, minibatch_size=20, lmbda=0.001, eta=0.01):
             #if we would want to use the learning schedule function from earlier
             #t = epoch * (n // minibatch_size) + i  # Total iteration count
             #learning_rate = eta / (1 + lmbda * t)  # Add a schedule for learning rate
-
+            
             # Compute the gradient with the regularization term lambda
             gradients = np.dot(xi.T, (logistic_predictions(theta_sgd, xi) - yi))
             gradients += 2 * lmbda * theta_sgd
             #theta_sgd = theta_sgd - learning_rate * gradients
             theta_sgd = theta_sgd - eta * gradients
+
+             # Print gradients and weights
+            #print(f"Gradients: {gradients.flatten()}")
+            #print(f"Weights: {theta_sgd.flatten()}")
 
     return theta_sgd
 
@@ -83,22 +90,59 @@ inputs = X_train_scaled
 targets = y_train.reshape(-1, 1)
 
 # Train logistic regression with SGD and ridge regularization
-eta = 0.01  # Set your desired fixed learning rate
-trained_weights = sgd(inputs, targets, eta=eta) #sgd
+eta = 0.01 # Set your desired fixed learning rate
+lmbda = 0.01
+n_epochs = 500
+minibatch_size = 70
+trained_weights = sgd(inputs, targets, n_epochs=n_epochs, minibatch_size= minibatch_size, eta=eta, lmbda=lmbda) #sgd
+#print("Trained weights:", trained_weights.flatten())
 
 #See how good the model work on the test set
 test_inputs = X_test_scaled
 test_targets = y_test.reshape(-1, 1)
 test_predictions = logistic_predictions(trained_weights, test_inputs)
+
+"""
+# Print predictions and targets for debugging
+print("Test Predictions:", test_predictions.flatten())
+print("Test Targets:", test_targets.flatten())
+"""
+
 accuracy = np.mean((test_predictions >= 0.5) == test_targets)
 
 print("Test Accuracy:", accuracy)
 
+
+#plotting the accuracy with respect to lambda
+
+lmbda_values = [0.0000000001, 0.001, 0.01, 0.1, 1.0, 10.0, 100, 1000] #lambda values we want to try
+accuracies = [] #where to store the accuracy for each lamda value
+
+for lmbda in lmbda_values: 
+    # Train logistic regression with SGD and ridge regularization
+    trained_weights = sgd(inputs, targets, n_epochs=n_epochs, minibatch_size= minibatch_size, eta=eta, lmbda=lmbda)
+
+    # Evaluate on the test set
+    test_predictions = logistic_predictions(trained_weights, test_inputs)
+    accuracy = np.mean((test_predictions >= 0.5) == test_targets)
+    
+    accuracies.append(accuracy)
+
+# Plot the results
+plt.plot(lmbda_values, accuracies, marker='o')
+plt.xscale('log')  # Use a logarithmic scale for lambda
+plt.xlabel('Regularization Parameter (lambda)')
+plt.ylabel('Test Accuracy')
+plt.title('Accuracy vs Regularization Parameter')
+plt.show()
+
+
+"""
 # Plotting the training loss over number of epochs
 theta_initial = np.random.randn(X_train_scaled.shape[1], 1)
 training_gradient_fun = grad(training_loss)
 theta_sgd = theta_initial.copy()
-num_epochs = 100 #number of epochs
+num_epochs = 20 #number of epochs
 losses = []
 
 for epoch in range(num_epochs):
@@ -113,3 +157,4 @@ plt.xlabel('Epochs')
 plt.ylabel('Training Loss')
 plt.title('Training Loss over Epochs')
 plt.show()
+"""
