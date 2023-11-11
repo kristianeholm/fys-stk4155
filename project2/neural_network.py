@@ -9,8 +9,9 @@ class NeuralNetwork:
     def __init__(
             self,
             num_features, 
-            regr_or_class='regr', 
+            learning_type='regr', 
             activation = 'sigmoid',
+            cost_function='MSE',
             #X_data,
             #Y_data,
             #n_hidden_neurons=50,
@@ -39,7 +40,8 @@ class NeuralNetwork:
         self.biases = {}
         self.activations = {}
         self.errors = {}
-        self.learning_type = regr_or_class
+        self.learning_type = learning_type
+        self.cost_function = cost_function
         if activation == 'sigmoid':
             self.activation_function = sigmoid
             self.activation_prime = sigmoid_derivative
@@ -118,13 +120,13 @@ class NeuralNetwork:
             self.biases[current_layer] = self.biases[current_layer] - self.learning_rate*np.sum(error, axis=0)
             current_layer += 1
         
-    def train(self, data, target, data_val=None, target_val=None, loss='MSE'): 
+    def train(self, data, target, data_val=None, target_val=None): 
         minibatches = 1
         n = len(data)
         batch_size = int(n/minibatches)
         
-        self.loss_train = []
-        self.loss_val = []
+        self.cost_train = []
+        self.cost_test = []
         
         for i in range(self.epochs):
             data_shuffle, target_shuffle = shuffle(data, target)
@@ -137,25 +139,25 @@ class NeuralNetwork:
             self.update_weights()
             
             target_pred_val = self.predict(data_val)
-            if loss == 'MSE':
+            if self.cost_function == 'MSE':
                 val_loss = MSE(target_pred_val, target_val)
-            elif loss == 'R2':
+            elif self.cost_function == 'R2':
                 val_loss = R2(target_pred_val, target_val)
-            elif loss == 'accuracy':
+            elif self.cost_function == 'accuracy':
                 val_loss = accuracy(target_pred_val, target_val)
-            elif loss == 'logistic':
+            elif self.cost_function == 'logistic':
                 val_loss = cross_entropy(target_pred_val, target_val)
                 
             target_pred_train = self.predict(data)
-            if loss == 'MSE':
+            if self.cost_function == 'MSE':
                 train_loss = MSE(target_pred_train, target)
-            elif loss == 'R2':
+            elif self.cost_function == 'R2':
                 train_loss = R2(target_pred_train, target)
-            elif loss == 'accuracy':
+            elif self.cost_function == 'accuracy':
                 train_loss = accuracy(target_pred_train, target)                                                            
             
-            self.loss_val.append(val_loss)
-            self.loss_train.append(train_loss)
+            self.cost_test.append(val_loss)
+            self.cost_train.append(train_loss)
 
     def predict(self, x):
         self.activations[0] = x

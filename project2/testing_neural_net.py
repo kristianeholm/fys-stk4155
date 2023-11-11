@@ -38,16 +38,16 @@ X_test_scaled = scaler.transform(X_test)
 
 ################
 num_epochs = 10000 
-minibatches = 5 
+minibatches = 5
 learning_rate = 0.0001 
 lmbd = 0 
 
-network = NeuralNetwork(X_train_scaled.shape[1], 'regr', 'sigmoid', minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)         
+network = NeuralNetwork(X_train_scaled.shape[1], 'regr', 'sigmoid', cost_function='MSE', minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)         
 network.add_layer(30) 
 network.add_layer(30) 
 network.add_layer(1)    
      
-network.train(X_train_scaled, y_train, data_val=X_val_scaled, target_val=y_val, loss='MSE') 
+network.train(X_train_scaled, y_train, data_val=X_val_scaled, target_val=y_val) 
 
 test_pred = network.predict(X_test_scaled)
 
@@ -61,8 +61,8 @@ plt.legend()
 plt.savefig('NNregr_x_y.pdf')
 plt.show()
 ####
-plt.plot(range(num_epochs), network.loss_train, label='Train loss'); 
-plt.plot(range(num_epochs), network.loss_val, label='Validation loss'); 
+plt.plot(range(num_epochs), network.cost_train, label='Train error'); 
+plt.plot(range(num_epochs), network.cost_test, label='Test error'); 
 plt.xlabel('Number of iterations'); 
 plt.ylabel('Mean squared error') 
 plt.legend() 
