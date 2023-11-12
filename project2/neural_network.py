@@ -65,21 +65,23 @@ class NeuralNetwork:
         weights = self.weights.get(current_layer)
         bias = self.biases.get(current_layer)
         inputs = self.activations.get(current_layer)
-        z = inputs @ weights + bias
-        return z
+        return inputs @ weights + bias
             
     def feed_forward(self):
         number_of_layers = len(self.weights)
-        for current_layer in range(number_of_layers):
-            z = self.compute_z(current_layer)
-            if current_layer == number_of_layers - 1:
-                if self.learning_type == 'class':
-                    a = sigmoid(z)
-                else:
-                    a = z
-            else:
-                a = self.activation_function(z)
-            self.activations[current_layer+1] = a
+        
+        #Loop over hidden layers:
+        for current_layer in range(number_of_layers-1):
+            z_h = self.compute_z(current_layer)
+            a_h = self.activation_function(z_h)
+            self.activations[current_layer+1] = a_h
+            
+        #Output layer:
+        z_o = self.compute_z(number_of_layers-1)
+        if self.learning_type == 'regr':
+            self.activations[number_of_layers] = z_o
+        else:
+            self.activations[number_of_layers] = sigmoid(z_o)
             
     #TODO, put feed_forward_out back
 
