@@ -52,21 +52,14 @@ class NeuralNetwork:
             self.activation_function = relu_leaky
             self.activation_prime = relu_leaky_derivative
 
-    def initialize_weights(self, size_layer, size_prev_layer):
-        return np.random.randn(size_prev_layer, size_layer) 
-    
-    def initialize_bias(self, size_layer):
-        return np.random.rand(size_layer)
-        
     def add_layer(self, size_layer):
-        if len(self.weights) == 0:
-            self.weights[0] = self.initialize_weights(size_layer, self.num_features)
-            self.biases[0] = self.initialize_bias(size_layer)
-        else:
-            counter = len(self.weights)
-            size_prev_layer = self.weights[counter - 1].shape[1]
-            self.weights[counter] = self.initialize_weights(size_layer, size_prev_layer)
-            self.biases[counter] = self.initialize_bias(size_layer)
+        number_layers_so_far = len(self.weights)
+        if number_layers_so_far == 0:
+            number_of_inputs = self.num_features
+        else: 
+            number_of_inputs = self.weights[number_layers_so_far - 1].shape[1]
+        self.weights[number_layers_so_far] = np.random.randn(number_of_inputs, size_layer)
+        self.biases[number_layers_so_far] = np.random.rand(size_layer)
             
     def compute_z(self, current_layer):
         weights = self.weights.get(current_layer)
