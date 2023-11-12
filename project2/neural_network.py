@@ -128,7 +128,7 @@ class NeuralNetwork:
             current_layer += 1
         
     def train(self, data, target, data_val=None, target_val=None): 
-        minibatches = 1
+        minibatches = self.minibatches
         n = len(data)
         batch_size = int(n/minibatches)
         
