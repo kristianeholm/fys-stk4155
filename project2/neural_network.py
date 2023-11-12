@@ -106,6 +106,18 @@ class NeuralNetwork:
             self.errors[current_layer] = error
             current_layer -= 1
             
+    def compute_cost_function(self, prediction, target):
+        if self.cost_function == 'MSE':
+            return MSE(prediction, target)
+        elif self.cost_function == 'R2':
+            return R2(prediction, target)
+        elif self.cost_function == 'accuracy':
+            return accuracy(prediction, target)
+        elif self.cost_function == 'logistic':
+            return cross_entropy(prediction, target)
+        else:
+            raise Exception('Undefined cost function', self.cost_function)
+    
     def update_weights(self):
         current_layer = 0
         while current_layer < len(self.weights):
@@ -132,24 +144,9 @@ class NeuralNetwork:
             self.feed_forward()
             self.backpropagation(target_minibatch)
             self.update_weights()
-            
-            target_pred_val = self.predict(data_val)
-            if self.cost_function == 'MSE':
-                val_loss = MSE(target_pred_val, target_val)
-            elif self.cost_function == 'R2':
-                val_loss = R2(target_pred_val, target_val)
-            elif self.cost_function == 'accuracy':
-                val_loss = accuracy(target_pred_val, target_val)
-            elif self.cost_function == 'logistic':
-                val_loss = cross_entropy(target_pred_val, target_val)
-                
-            target_pred_train = self.predict(data)
-            if self.cost_function == 'MSE':
-                train_loss = MSE(target_pred_train, target)
-            elif self.cost_function == 'R2':
-                train_loss = R2(target_pred_train, target)
-            elif self.cost_function == 'accuracy':
-                train_loss = accuracy(target_pred_train, target)                                                            
+
+            val_loss = self.compute_cost_function(self.predict(data_val), target_val)
+            train_loss = self.compute_cost_function(self.predict(data), target)                                                         
             
             self.cost_test.append(val_loss)
             self.cost_train.append(train_loss)
