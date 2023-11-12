@@ -69,19 +69,19 @@ class NeuralNetwork:
         return z
             
     def feed_forward(self):
-        current_layer = 0
-        num_layers = len(self.weights)
-        while current_layer < num_layers:
+        number_of_layers = len(self.weights)
+        for current_layer in range(number_of_layers):
             z = self.compute_z(current_layer)
-            if current_layer == num_layers - 1:
+            if current_layer == number_of_layers - 1:
                 if self.learning_type == 'class':
                     a = sigmoid(z)
                 else:
                     a = z
             else:
                 a = self.activation_function(z)
-            current_layer += 1
-            self.activations[current_layer] = a
+            self.activations[current_layer+1] = a
+            
+    #TODO, put feed_forward_out back
 
     def backpropagation(self, y):
         current_layer = len(self.weights)
