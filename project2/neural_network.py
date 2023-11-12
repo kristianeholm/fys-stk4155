@@ -145,11 +145,11 @@ class NeuralNetwork:
             self.backpropagation(target_minibatch)
             self.update_weights()
 
-            val_loss = self.compute_cost_function(self.predict(data_val), target_val)
-            train_loss = self.compute_cost_function(self.predict(data), target)                                                         
+            test_cost = self.compute_cost_function(self.predict(data_val), target_val)
+            train_cost = self.compute_cost_function(self.predict(data), target)                                                         
             
-            self.cost_test.append(val_loss)
-            self.cost_train.append(train_loss)
+            self.cost_test.append(test_cost)
+            self.cost_train.append(train_cost)
 
     def predict(self, x):
         self.activations[0] = x
