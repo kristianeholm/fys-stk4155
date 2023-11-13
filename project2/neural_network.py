@@ -9,8 +9,9 @@ class NeuralNetwork:
     def __init__(
             self,
             num_features, 
-            regr_or_class='regr', 
+            learning_type='regression', 
             activation = 'sigmoid',
+            cost_function='MSE',
             #X_data,
             #Y_data,
             #n_hidden_neurons=50,
@@ -39,7 +40,8 @@ class NeuralNetwork:
         self.biases = {}
         self.activations = {}
         self.errors = {}
-        self.learning_type = regr_or_class
+        self.learning_type = learning_type
+        self.cost_function = cost_function
         if activation == 'sigmoid':
             self.activation_function = sigmoid
             self.activation_prime = sigmoid_derivative
@@ -50,50 +52,45 @@ class NeuralNetwork:
             self.activation_function = relu_leaky
             self.activation_prime = relu_leaky_derivative
 
-    def initialize_weights(self, size_layer, size_prev_layer):
-        return np.random.randn(size_prev_layer, size_layer) 
-    
-    def initialize_bias(self, size_layer):
-        return np.random.rand(size_layer)
-        
     def add_layer(self, size_layer):
-        if len(self.weights) == 0:
-            self.weights[0] = self.initialize_weights(size_layer, self.num_features)
-            self.biases[0] = self.initialize_bias(size_layer)
-        else:
-            counter = len(self.weights)
-            size_prev_layer = self.weights[counter - 1].shape[1]
-            self.weights[counter] = self.initialize_weights(size_layer, size_prev_layer)
-            self.biases[counter] = self.initialize_bias(size_layer)
+        number_layers_so_far = len(self.weights)
+        if number_layers_so_far == 0:
+            number_of_inputs = self.num_features
+        else: 
+            number_of_inputs = self.weights[number_layers_so_far - 1].shape[1]
+        self.weights[number_layers_so_far] = np.random.randn(number_of_inputs, size_layer)
+        self.biases[number_layers_so_far] = np.random.rand(size_layer)
             
     def compute_z(self, current_layer):
         weights = self.weights.get(current_layer)
         bias = self.biases.get(current_layer)
         inputs = self.activations.get(current_layer)
-        z = inputs @ weights + bias
-        return z
+        return inputs @ weights + bias
             
     def feed_forward(self):
-        current_layer = 0
-        num_layers = len(self.weights)
-        while current_layer < num_layers:
-            z = self.compute_z(current_layer)
-            if current_layer == num_layers - 1:
-                if self.learning_type == 'class':
-                    a = sigmoid(z)
-                else:
-                    a = z
-            else:
-                a = self.activation_function(z)
-            current_layer += 1
-            self.activations[current_layer] = a
+        number_of_layers = len(self.weights)
+        
+        #Loop over hidden layers:
+        for current_layer in range(number_of_layers-1):
+            z_h = self.compute_z(current_layer)
+            a_h = self.activation_function(z_h)
+            self.activations[current_layer+1] = a_h
+            
+        #Output layer:
+        z_o = self.compute_z(number_of_layers-1)
+        if self.learning_type == 'regression':
+            self.activations[number_of_layers] = z_o
+        else:
+            self.activations[number_of_layers] = sigmoid(z_o)
+            
+    #TODO, put feed_forward_out back
 
     def backpropagation(self, y):
         current_layer = len(self.weights)
         a = self.activations.get(current_layer).ravel()
         C_deriv = (a - y).reshape(-1, 1)
         z = self.compute_z(current_layer-1)
-        if self.learning_type == 'regr':
+        if self.learning_type == 'regression':
             activation_deriv = np.ones((len(z), 1))
         elif self.learning_type == 'class':
             activation_deriv = sigmoid_derivative(z)
@@ -109,6 +106,18 @@ class NeuralNetwork:
             self.errors[current_layer] = error
             current_layer -= 1
             
+    def compute_cost_function(self, prediction, target):
+        if self.cost_function == 'MSE':
+            return MSE(prediction, target)
+        elif self.cost_function == 'R2':
+            return R2(prediction, target)
+        elif self.cost_function == 'accuracy':
+            return accuracy(prediction, target)
+        elif self.cost_function == 'logistic':
+            return cross_entropy(prediction, target)
+        else:
+            raise Exception('Undefined cost function', self.cost_function)
+    
     def update_weights(self):
         current_layer = 0
         while current_layer < len(self.weights):
@@ -118,13 +127,13 @@ class NeuralNetwork:
             self.biases[current_layer] = self.biases[current_layer] - self.learning_rate*np.sum(error, axis=0)
             current_layer += 1
         
-    def train(self, data, target, data_val=None, target_val=None, loss='MSE'): 
-        minibatches = 1
+    def train(self, data, target, data_val=None, target_val=None): 
+        minibatches = self.minibatches
         n = len(data)
         batch_size = int(n/minibatches)
         
-        self.loss_train = []
-        self.loss_val = []
+        self.cost_train = [] 
+        self.cost_test = []
         
         for i in range(self.epochs):
             data_shuffle, target_shuffle = shuffle(data, target)
@@ -135,27 +144,12 @@ class NeuralNetwork:
             self.feed_forward()
             self.backpropagation(target_minibatch)
             self.update_weights()
+
+            test_cost = self.compute_cost_function(self.predict(data_val), target_val)
+            train_cost = self.compute_cost_function(self.predict(data), target)                                                         
             
-            target_pred_val = self.predict(data_val)
-            if loss == 'MSE':
-                val_loss = MSE(target_pred_val, target_val)
-            elif loss == 'R2':
-                val_loss = R2(target_pred_val, target_val)
-            elif loss == 'accuracy':
-                val_loss = accuracy(target_pred_val, target_val)
-            elif loss == 'logistic':
-                val_loss = cross_entropy(target_pred_val, target_val)
-                
-            target_pred_train = self.predict(data)
-            if loss == 'MSE':
-                train_loss = MSE(target_pred_train, target)
-            elif loss == 'R2':
-                train_loss = R2(target_pred_train, target)
-            elif loss == 'accuracy':
-                train_loss = accuracy(target_pred_train, target)                                                            
-            
-            self.loss_val.append(val_loss)
-            self.loss_train.append(train_loss)
+            self.cost_test.append(test_cost)
+            self.cost_train.append(train_cost)
 
     def predict(self, x):
         self.activations[0] = x
