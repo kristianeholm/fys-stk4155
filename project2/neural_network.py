@@ -9,7 +9,7 @@ class NeuralNetwork:
     def __init__(
             self,
             num_features, 
-            learning_type='regr', 
+            learning_type='regression', 
             activation = 'sigmoid',
             cost_function='MSE',
             #X_data,
@@ -78,7 +78,7 @@ class NeuralNetwork:
             
         #Output layer:
         z_o = self.compute_z(number_of_layers-1)
-        if self.learning_type == 'regr':
+        if self.learning_type == 'regression':
             self.activations[number_of_layers] = z_o
         else:
             self.activations[number_of_layers] = sigmoid(z_o)
@@ -90,7 +90,7 @@ class NeuralNetwork:
         a = self.activations.get(current_layer).ravel()
         C_deriv = (a - y).reshape(-1, 1)
         z = self.compute_z(current_layer-1)
-        if self.learning_type == 'regr':
+        if self.learning_type == 'regression':
             activation_deriv = np.ones((len(z), 1))
         elif self.learning_type == 'class':
             activation_deriv = sigmoid_derivative(z)
