@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import load_breast_cancer
 
 from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
-from metrics import MSE, R2
+from metrics import MSE, R2, accuracy
 from neural_network import NeuralNetwork
 
 #Function for making the design matrix
@@ -44,7 +44,7 @@ minibatches = 5
 learning_rate = 0.0005
 lmbd = 1.0
 
-network = NeuralNetwork(X_train_scaled.shape[1], 'class', 'sigmoid', cost_function='MSE', minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)         
+network = NeuralNetwork(X_train_scaled.shape[1], 'class', 'sigmoid', cost_function='accuracy', minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)         
 network.add_layer(12)
 network.add_layer(12)
 network.add_layer(1)    
@@ -52,16 +52,16 @@ network.add_layer(1)
 network.train(X_train_scaled, y_train, data_val=X_test_scaled, target_val=y_test) 
 
 test_pred = network.predict(X_test_scaled)
-cost = MSE(test_pred, y_test)
-print('Our neural network, MSE: ' + str(cost))
+cost = accuracy(test_pred, y_test)
+print('Our neural network, accuracy: ' + str(cost))
 
 ####
-plt.title('Classification of breast cancer data, sigmoid activation, MSE cost')
+plt.title('Classification of breast cancer data, sigmoid activation, accuracy cost')
 plt.plot(range(num_epochs), network.cost_train, label='Train error'); 
 plt.plot(range(num_epochs), network.cost_test, label='Test error'); 
 plt.xlabel('Number of iterations'); 
-plt.ylabel('MSE error') 
+plt.ylabel('accuracy error') 
 plt.legend() 
 plt.yscale('log') 
-plt.savefig('NN_classification_MSE.pdf')
+plt.savefig('NN_classification_acc.pdf')
 plt.show()
