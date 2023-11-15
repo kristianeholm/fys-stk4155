@@ -91,9 +91,9 @@ targets = y_train.reshape(-1, 1)
 
 # Train logistic regression with SGD and ridge regularization
 eta = 0.01 # Set your desired fixed learning rate
-lmbda = 0.01
-n_epochs = 500
-minibatch_size = 70
+lmbda = 0.001
+n_epochs = 1000
+minibatch_size = 50
 trained_weights = sgd(inputs, targets, n_epochs=n_epochs, minibatch_size= minibatch_size, eta=eta, lmbda=lmbda) #sgd
 #print("Trained weights:", trained_weights.flatten())
 

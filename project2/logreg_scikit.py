@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
-#design matrix
+#Function for making the design matrix
 def create_design_matrix(x, polynomial_degree=1):
     X = pd.DataFrame()
     for i in range(1, polynomial_degree + 1):
@@ -24,7 +24,7 @@ cancer=load_breast_cancer()      #Download breast cancer dataset
 x = cancer.data                     #Feature matrix of 569 rows (samples) and 30 columns (parameters)
 y = (cancer.target == 1).astype(int)                 #Label array of 569 rows (0 for benign and 1 for malignant)
 
-#design matrix
+#design matrix with input from x
 X = create_design_matrix(x)
 
 # Split the data into training and test --> training 80%, test 20%
@@ -35,14 +35,14 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# Initialize and train logistic regression model
+#using scikits logic regression function to train the model 
 logreg = LogisticRegression(random_state=42)
 logreg.fit(X_train_scaled, y_train)
 
 # Predict on the test set
-y_pred = logreg.predict(X_test_scaled)
+y_prediction = logreg.predict(X_test_scaled)
 
-# Calculate accuracy
-accuracy = accuracy_score(y_test, y_pred)
-print("Test Accuracy (Scikit-Learn Logistic Regression):", accuracy)
+#Find the accuracy
+accuracy = accuracy_score(y_test, y_prediction)
+print("Test Accuracy with Scikit-Learn Logistic Regression):", accuracy)
 
