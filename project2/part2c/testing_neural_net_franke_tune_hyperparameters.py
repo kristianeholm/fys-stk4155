@@ -1,11 +1,14 @@
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-    # to categorical turns our integer vector into a onehot representation
 from sklearn.metrics import accuracy_score
+
+# Add the parent directory to sys.path
+sys.path.append("..") 
 
 from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
 from metrics import MSE, R2

@@ -1,9 +1,13 @@
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import load_breast_cancer
+
+# Add the parent directory to sys.path
+sys.path.append("..") 
 
 from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
 from metrics import MSE, R2, accuracy
@@ -60,8 +64,8 @@ plt.title('Classification of breast cancer data, sigmoid activation, accuracy co
 plt.plot(range(num_epochs), network.cost_train, label='Train error'); 
 plt.plot(range(num_epochs), network.cost_test, label='Test error'); 
 plt.xlabel('Number of iterations'); 
-plt.ylabel('accuracy error') 
-plt.legend() 
-plt.yscale('log') 
+plt.ylabel('accuracy error')
+plt.ylim(0.8, 1)
+plt.legend()
 plt.savefig('NN_classification_acc.pdf')
 plt.show()
