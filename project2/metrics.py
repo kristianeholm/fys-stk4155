@@ -12,6 +12,7 @@ def accuracy(y_data, y_model):
     for i in range(len(y_data)):
         if y_data[i] == y_model[i]:
             acc += 1
+    #print('Lengden var ' + str(len(y_data)))
     return acc/len(y_data)
 
 def cross_entropy(y_data, y_model):
