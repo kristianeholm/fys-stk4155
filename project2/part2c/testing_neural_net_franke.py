@@ -20,28 +20,16 @@ def FrankeFunction(x,y):
 	term3 = 0.5*np.exp(-(9*x-7)**2/4.0 - 0.25*((9*y-3)**2))
 	term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
 	return term1 + term2 + term3 + term4
-    
-def create_design_matrix(x, polynomial_degree=1):
-    X = x#np.ones((len(x),1))
-    for i in range(1, polynomial_degree + 1):
-        X[i] = x**i
+
+def create_X(x, y):
+    if len(x.shape) > 1:
+        x = np.ravel(x)
+        y = np.ravel(y)
+    N = len(x)
+    X = np.ones((N,2))
+    X[:,0] = x
+    X[:,1] = y
     return X
-    
-def create_X(x, y, n ):
-	if len(x.shape) > 1:
-		x = np.ravel(x)
-		y = np.ravel(y)
-
-	N = len(x)
-	l = int((n+1)*(n+2)/2)		# Number of elements in beta
-	X = np.ones((N,l))
-
-	for i in range(1,n+1):
-		q = int((i)*(i+1)/2)
-		for k in range(i+1):
-			X[:,q+k] = (x**(i-k))*(y**k)
-
-	return X
     
 ###################
 noiseSpread = 0.1
@@ -54,7 +42,7 @@ y = np.random.uniform(0, 1, datapoints)
 z = FrankeFunction(x, y) + np.random.normal(0,noiseSpread,size=len(x))
 
 # Create design matrix, up to second degree
-X = create_X(x, y, 1)
+X = create_X(x, y)
 
 # Split data in train, validation and test set
 X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.2, random_state=1)
