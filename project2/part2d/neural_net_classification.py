@@ -43,13 +43,12 @@ X_train_scaled = scaler.transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 ################
-num_epochs = 10000
+num_epochs = 3000
 minibatches = 5
 learning_rate = 0.0005
 lmbd = 1.0
 
 network = NeuralNetwork(X_train_scaled.shape[1], 'class', 'sigmoid', cost_function='accuracy', minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)         
-network.add_layer(12)
 network.add_layer(12)
 network.add_layer(1)    
      
