@@ -20,26 +20,26 @@ X = cancer['data']
 y = cancer['target']
 
 # Split data in train, validation and test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.1, random_state=1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state=1)
 # Scale the data
 scaler = StandardScaler()
 scaler.fit(X_train)
+
+print('Number train data: ' + str(X_train.shape))
+print('Number test data: ' + str(X_test.shape))
 
 X_train_scaled = scaler.transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 ################
-num_epochs = 5000
-minibatches = 5
+num_epochs = 1500
+minibatches = 3
 learning_rate = 0.0001
 lmbd = 1.0
 
 network = NeuralNetwork(X_train.shape[1], 'class', 'sigmoid', cost_function='accuracy', minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)         
 network.add_layer(32)
 network.add_layer(32)
-#network.add_layer(32)
-#network.add_layer(32)
-#network.add_layer(40)
 network.add_layer(1)    
      
 network.train(X_train, y_train, data_val=X_test, target_val=y_test) 
