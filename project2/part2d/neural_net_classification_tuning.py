@@ -36,7 +36,7 @@ num_epochs = 1500
 minibatches = 5
 
 # Learning rates to test
-eta_vals = [ 0.00001, 0.00005, 0.0001, 0.0005, 0.001]
+eta_vals = [ 0.0001, 0.0005, 0.001, 0.005, 0.01]
 # Lambdas to test
 lmbd_vals = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5, 10, 50]
 
