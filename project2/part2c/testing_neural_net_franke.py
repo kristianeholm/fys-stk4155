@@ -30,13 +30,20 @@ def create_X(x, y):
     X[:,0] = x
     X[:,1] = y
     return X
-    
+
+#if len(sys.argv) < 5:
+#    sys.exit('Usage: project1.py <polynomial degree> <datapoints> <sigma^2 for random noise> <number of runs>')
+#Above if we want to require parameters, however the below restures the old default values.
+if len(sys.argv) < 3:
+	cost_function = 'MSE'
+	activation = 'sigmoid'
+else:
+	cost_function = sys.argv[1]
+	activation = sys.argv[2]
+
 ###################
 noiseSpread = 0.1
 datapoints = 400
-n = datapoints
-#x = 2 * np.random.rand(n)
-#y = 4 + 3 * x + 2 * x**2 + np.random.normal(scale = 0.1, size = len(x))  # f(x) = a_0 + a_1x + a_2x^2
 x = np.random.uniform(0, 1, datapoints)
 y = np.random.uniform(0, 1, datapoints)
 z = FrankeFunction(x, y) + np.random.normal(0,noiseSpread,size=len(x))
@@ -52,7 +59,6 @@ scaler = StandardScaler()
 scaler.fit(X_train)
 
 X_train_scaled = scaler.transform(X_train)
-#X_val_scaled = scaler.transform(X_val)
 X_test_scaled = scaler.transform(X_test)
 
 ################
@@ -61,7 +67,7 @@ minibatches = 5
 learning_rate = 0.0001 
 lmbd = 0 
 
-network = NeuralNetwork(X_train_scaled.shape[1], 'regression', 'sigmoid', cost_function='MSE', minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)       
+network = NeuralNetwork(X_train_scaled.shape[1], 'regression', activation, cost_function=cost_function, minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)       
         
 network.add_layer(30) 
 network.add_layer(30) 
@@ -70,9 +76,9 @@ network.add_layer(1)
 network.train(X_train_scaled, z_train, data_val=X_test_scaled, target_val=z_test) 
 
 test_pred = network.predict(X_test_scaled)
-cost = MSE(test_pred, z_test)
+cost = network.compute_cost_function(test_pred, z_test)
 
-print("MSE cost function on test set: ", cost)
+print(cost_function + " cost function on test set: ", cost)
 
 #test_pred = network.predict(X_test_scaled)
 
@@ -116,7 +122,7 @@ def surface_plot():
 #surface_plot()
 
 #print 
-X_test_for_plot = X_test#.to_numpy()
+X_test_for_plot = X_test
 #plt.plot(x, y, 'r.', label='Data Points')
 #plt.plot(X_test_for_plot[:,0], test_pred, 'g.', label='Model prediction')
 #plt.xlabel(r'x')
@@ -128,9 +134,10 @@ X_test_for_plot = X_test#.to_numpy()
 ####
 plt.plot(range(num_epochs), network.cost_train, label='Train error'); 
 plt.plot(range(num_epochs), network.cost_test, label='Test error'); 
+plt.title('Franke function regression, activation function: ' + activation)
 plt.xlabel('Number of iterations'); 
-plt.ylabel('Mean squared error') 
+plt.ylabel(cost_function) 
 plt.legend() 
 plt.yscale('log') 
-plt.savefig('NNregr_errors.pdf')
+plt.savefig('NNregr_errors_{}_{}.pdf'.format(cost_function, activation))
 plt.show()
