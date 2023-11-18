@@ -44,13 +44,13 @@ class NeuralNetwork:
         self.cost_function = cost_function
         if activation == 'sigmoid':
             self.activation_function = sigmoid
-            self.activation_prime = sigmoid_derivative
+            self.activation_derivative = sigmoid_derivative
         elif activation == 'relu':
             self.activation_function = relu
-            self.activation_prime = relu_derivative
+            self.activation_derivative = relu_derivative
         elif activation == 'leakyrelu':
             self.activation_function = relu_leaky
-            self.activation_prime = relu_leaky_derivative
+            self.activation_derivative = relu_leaky_derivative
 
     def add_layer(self, size_layer):
         number_layers_so_far = len(self.weights)
@@ -101,7 +101,7 @@ class NeuralNetwork:
             error_prev = self.errors[current_layer + 1]
             weights = self.weights[current_layer]
             z = self.compute_z(current_layer-1)
-            activation_deriv = self.activation_prime(z)
+            activation_deriv = self.activation_derivative(z)
             error = np.dot(error_prev, weights.T) * activation_deriv
             self.errors[current_layer] = error
             current_layer -= 1
@@ -113,8 +113,6 @@ class NeuralNetwork:
             return R2(prediction, target)
         elif self.cost_function == 'accuracy':
             return accuracy(prediction, target)
-        elif self.cost_function == 'logistic':
-            return cross_entropy(prediction, target)
         else:
             raise Exception('Undefined cost function', self.cost_function)
     
