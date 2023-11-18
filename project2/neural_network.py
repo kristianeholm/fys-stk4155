@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.utils import shuffle
 
 from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
-from metrics import MSE, R2, accuracy, cross_entropy
+from metrics import MSE, R2, accuracy
 
 class NeuralNetwork:
 #Credits to https://github.com/CompPhysics/MachineLearning/blob/master/doc/LectureNotes/week41.ipynb from which this class reuses some code.
@@ -88,21 +88,20 @@ class NeuralNetwork:
     def backpropagation(self, y):
         current_layer = len(self.weights)
         a = self.activations.get(current_layer).ravel()
-        C_deriv = (a - y).reshape(-1, 1)
+        C_derivative = (a - y).reshape(-1, 1)
         z = self.compute_z(current_layer-1)
         if self.learning_type == 'regression':
-            activation_deriv = np.ones((len(z), 1))
+            final_activation_derivative = np.ones((len(z), 1))
         elif self.learning_type == 'class':
-            activation_deriv = sigmoid_derivative(z)
-        output_error = C_deriv * activation_deriv
+            final_activation_derivative = sigmoid_derivative(z)
+        output_error = C_derivative * final_activation_derivative
         self.errors[current_layer] = output_error
         current_layer -= 1
         while current_layer > 0:
             error_prev = self.errors[current_layer + 1]
             weights = self.weights[current_layer]
             z = self.compute_z(current_layer-1)
-            activation_deriv = self.activation_derivative(z)
-            error = np.dot(error_prev, weights.T) * activation_deriv
+            error = np.dot(error_prev, weights.T) * self.activation_derivative(z)
             self.errors[current_layer] = error
             current_layer -= 1
             

@@ -14,7 +14,3 @@ def accuracy(y_data, y_model):
             acc += 1
     #print('Lengden var ' + str(len(y_data)))
     return acc/len(y_data)
-
-def cross_entropy(y_data, y_model):
-    cost = np.sum(y_data @ y_model - np.log(1 + np.exp(y_model)))
-    return cost
