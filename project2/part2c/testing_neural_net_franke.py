@@ -64,8 +64,8 @@ X_test_scaled = scaler.transform(X_test)
 ################
 num_epochs = 10000 
 minibatches = 5
-learning_rate = 0.0001 
-lmbd = 0 
+learning_rate = 0.0001
+lmbd = 1
 
 network = NeuralNetwork(X_train_scaled.shape[1], 'regression', activation, cost_function=cost_function, minibatches=minibatches, epochs = num_epochs, eta=learning_rate, lmbd=lmbd)       
         

@@ -70,7 +70,7 @@ test_accuracy = np.zeros((len(eta_vals), len(lmbd_vals)))
 for i, eta in enumerate(eta_vals):
     cost_rate = []
     for j, lmbd in enumerate(lmbd_vals):
-        network = NeuralNetwork(X_train_scaled.shape[1], 'regression', 'leakyrelu', cost_function='MSE', minibatches=minibatches, epochs = num_epochs, eta=eta, lmbd=lmbd)         
+        network = NeuralNetwork(X_train_scaled.shape[1], 'regression', 'sigmoid', cost_function='MSE', minibatches=minibatches, epochs = num_epochs, eta=eta, lmbd=lmbd)         
         network.add_layer(12)
         network.add_layer(12)
         network.add_layer(1)
@@ -81,7 +81,7 @@ for i, eta in enumerate(eta_vals):
         
         print("Learning rate  = ", eta)
         print("Lambda = ", lmbd)
-        print("leakyrelu cost function on test set: ", MSE(z_test, test_pred))
+        print("sigmoid cost function on test set. MSE: ", cost)
         print()
 
         cost_rate.append(cost)
@@ -92,7 +92,8 @@ sns.set()
 df_cost = pd.DataFrame(all_costs)
 df_cost.index = lmbd_vals
 
-sns.heatmap(df_cost, annot=True, cmap="viridis");
-plt.ylabel(r'Regularization parameter, $\lambda$');
+sns.heatmap(df_cost, annot=True, cmap="viridis")
+plt.ylabel(r'Regularization parameter, $\lambda$')
 plt.xlabel(r'Learning rate');
-plt.savefig('heatmap_nn_train_franke_leaky.pdf')
+plt.title('NN sigmoid activation tuning')
+plt.savefig('heatmap_nn_train_franke_sigmoid.pdf')
