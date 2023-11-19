@@ -118,23 +118,26 @@ class NeuralNetwork:
             current_layer += 1
         
     def train(self, data, target, data_val=None, target_val=None): 
-        minibatches = self.minibatches
-        n = len(data)
-        batch_size = int(n/minibatches)
+        batch_size = int(len(data)/self.minibatches)
         
         self.cost_train = [] 
         self.cost_test = []
         
         for i in range(self.epochs):
+            #For each epoch, shuffle the train and test data with help of Scikit learn, to make minibatches unique. 
             data_shuffle, target_shuffle = shuffle(data, target)
-            batch_chosen = np.random.randint(0, minibatches)
+            #Pick one minibatch at random. Keep train of corresponding test data. 
+            batch_chosen = np.random.randint(0, self.minibatches)
             data_minibatch = data_shuffle[batch_chosen:batch_chosen+batch_size]
             target_minibatch = target_shuffle[batch_chosen:batch_chosen+batch_size]
+            #Insert minibatch of training data as input in the input layer. 
             self.activations[0] = data_minibatch
+            #Run normal neural network training
             self.feed_forward()
             self.backpropagation(target_minibatch)
             self.update_weights()
 
+            #Calculate cost for each epoc - not part of training, but to creat a plot to visualize training process. 
             test_cost = self.compute_cost_function(self.predict(data_val), target_val)
             train_cost = self.compute_cost_function(self.predict(data), target)                                                         
             
