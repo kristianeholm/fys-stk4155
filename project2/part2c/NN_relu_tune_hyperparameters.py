@@ -10,7 +10,6 @@ from sklearn.metrics import accuracy_score
 # Add the parent directory to sys.path
 sys.path.append("..") 
 
-from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
 from metrics import MSE, R2
 from neural_network import NeuralNetwork
 
