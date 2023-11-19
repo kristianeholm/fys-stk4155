@@ -62,7 +62,7 @@ plt.savefig('NNregr_x_y.pdf')
 plt.show()
 ####
 plt.plot(range(num_epochs), network.cost_train, label='Train cost'); 
-plt.plot(range(num_epochs), network.cost_val, label='Validation cost'); 
+plt.plot(range(num_epochs), network.cost_test, label='Validation cost'); 
 plt.xlabel('Number of iterations'); 
 plt.ylabel('Mean squared error') 
 plt.legend() 
