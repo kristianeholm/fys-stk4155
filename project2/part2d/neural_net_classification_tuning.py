@@ -10,7 +10,7 @@ from sklearn.datasets import load_breast_cancer
 # Add the parent directory to sys.path
 sys.path.append("..") 
 
-from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
+#from functions import sigmoid, sigmoid_derivative, relu, relu_derivative, relu_leaky, relu_leaky_derivative
 from metrics import MSE, R2, accuracy
 from neural_network import NeuralNetwork
 
@@ -46,7 +46,7 @@ test_accuracy = np.zeros((len(eta_vals), len(lmbd_vals)))
 for i, eta in enumerate(eta_vals):
     cost_rate = []
     for j, lmbd in enumerate(lmbd_vals):
-        network = NeuralNetwork(X_train_scaled.shape[1], 'class', 'sigmoid', cost_function='accuracy', minibatches=minibatches, epochs = num_epochs, eta=eta, lmbd=lmbd)         
+        network = NeuralNetwork(X_train_scaled.shape[1], 'class', 'leakyrelu', cost_function='accuracy', minibatches=minibatches, epochs = num_epochs, eta=eta, lmbd=lmbd)         
         network.add_layer(32)
         network.add_layer(32)
         network.add_layer(1)
@@ -71,4 +71,4 @@ df_cost.index = lmbd_vals
 sns.heatmap(df_cost, annot=True, cmap="viridis");
 plt.ylabel(r'Regularization parameter, $\lambda$');
 plt.xlabel(r'Learning rate');
-plt.savefig('heatmap_nn_train.pdf')
+plt.savefig('heatmap_nn_train_leaky.pdf')
