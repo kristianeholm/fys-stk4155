@@ -19,3 +19,7 @@ to
 eta_vals = [ 0.00001, 0.00005, 0.0001, 0.0005, 0.001]
 
 and rerun.
+
+And if you want to try Sigmoid and ReLU - the results we did not even show in report, but mentioned we had tested. Then you need to edit these files and replace where it says
+'leakyrelu'
+with 'relu' or 'sigmoid'
