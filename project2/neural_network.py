@@ -12,26 +12,14 @@ class NeuralNetwork:
             learning_type='regression', 
             activation = 'sigmoid',
             cost_function='MSE',
-            #X_data,
-            #Y_data,
-            #n_hidden_neurons=50,
-            #n_categories=10,
             epochs=10,
             minibatches=5,
             eta=0.1,
             lmbd=0.0):
 
-#        self.X_data_full = X_data
-#        self.Y_data_full = Y_data
-
-#        self.n_inputs = X_data.shape[0]
-#        self.n_features = X_data.shape[1]
-#        self.n_hidden_neurons = n_hidden_neurons
-#        self.n_categories = n_categories
 
         self.epochs = epochs
         self.minibatches = minibatches
-#        self.iterations = self.n_inputs // self.batch_size
         self.learning_rate = eta
         self.lmbd = lmbd
         
@@ -83,27 +71,30 @@ class NeuralNetwork:
         else:
             self.activations[number_of_layers] = sigmoid(z_o)
             
-    #TODO, put feed_forward_out back
+    #TODO, put feed_forward_out back so we can perform predict without side effects, however does not seem to cause problems with our current usage.
 
     def backpropagation(self, y):
         current_layer = len(self.weights)
-        a = self.activations.get(current_layer).ravel()
-        C_derivative = (a - y).reshape(-1, 1)
+        a = self.activations.get(current_layer).ravel() #Output last layer.
+        C_derivative = (a - y).reshape(-1, 1) #Derivative of cost function
         z = self.compute_z(current_layer-1)
+        #Derivative of last activation function
         if self.learning_type == 'regression':
             final_activation_derivative = np.ones((len(z), 1))
         elif self.learning_type == 'class':
             final_activation_derivative = sigmoid_derivative(z)
         output_error = C_derivative * final_activation_derivative
-        self.errors[current_layer] = output_error
+        self.errors[current_layer] = output_error #Error in the last layer
         current_layer -= 1
         while current_layer > 0:
+            #Compute error for currently looped layer, from the error of layer after.
             error_prev = self.errors[current_layer + 1]
             weights = self.weights[current_layer]
             z = self.compute_z(current_layer-1)
+            #Save computed error. 
             error = np.dot(error_prev, weights.T) * self.activation_derivative(z)
             self.errors[current_layer] = error
-            current_layer -= 1
+            current_layer = current_layer-1
             
     def compute_cost_function(self, prediction, target):
         if self.cost_function == 'MSE':
@@ -117,9 +108,11 @@ class NeuralNetwork:
     
     def update_weights(self):
         current_layer = 0
+        #Loop over the errors calculated during back propagation and update the weights accordingly. 
         while current_layer < len(self.weights):
             activations = self.activations[current_layer]
             error = self.errors[current_layer + 1]
+            #Updating weights and bias with negative learning rate times gradient, but also with the regularization parameter involved to prefer smaller weights. 
             self.weights[current_layer] = (1-self.learning_rate*self.lmbd/len(activations))*self.weights[current_layer] - self.learning_rate*np.dot(activations.T, error)
             self.biases[current_layer] = self.biases[current_layer] - self.learning_rate*np.sum(error, axis=0)
             current_layer += 1
