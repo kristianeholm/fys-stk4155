@@ -16,8 +16,6 @@ class NeuralNetwork:
             minibatches=5,
             eta=0.1,
             lmbd=0.0):
-
-
         self.epochs = epochs
         self.minibatches = minibatches
         self.learning_rate = eta
@@ -75,26 +73,28 @@ class NeuralNetwork:
 
     def backpropagation(self, y):
         current_layer = len(self.weights)
-        a = self.activations.get(current_layer).ravel() #Output last layer.
-        C_derivative = (a - y).reshape(-1, 1) #Derivative of cost function
+        #Output last layer.
+        a = self.activations.get(current_layer).ravel()
+        #Derivative of cost function
+        C_derivative = (a - y).reshape(-1, 1)
         z = self.compute_z(current_layer-1)
-        #Derivative of last activation function
         if self.learning_type == 'regression':
             final_activation_derivative = np.ones((len(z), 1))
         elif self.learning_type == 'class':
             final_activation_derivative = sigmoid_derivative(z)
         output_error = C_derivative * final_activation_derivative
-        self.errors[current_layer] = output_error #Error in the last layer
+        #Error in the last layer
+        self.errors[current_layer] = output_error
         current_layer -= 1
         while current_layer > 0:
             #Compute error for currently looped layer, from the error of layer after.
             error_prev = self.errors[current_layer + 1]
             weights = self.weights[current_layer]
             z = self.compute_z(current_layer-1)
-            #Save computed error. 
+            #Save computed error.
             error = np.dot(error_prev, weights.T) * self.activation_derivative(z)
             self.errors[current_layer] = error
-            current_layer = current_layer-1
+            current_layer -= 1
             
     def compute_cost_function(self, prediction, target):
         if self.cost_function == 'MSE':
@@ -108,36 +108,38 @@ class NeuralNetwork:
     
     def update_weights(self):
         current_layer = 0
-        #Loop over the errors calculated during back propagation and update the weights accordingly. 
+        #Loop over the errors calculated during back propagation and update the weights accordingly.
         while current_layer < len(self.weights):
             activations = self.activations[current_layer]
             error = self.errors[current_layer + 1]
-            #Updating weights and bias with negative learning rate times gradient, but also with the regularization parameter involved to prefer smaller weights. 
+            #Updating weights and bias with negative learning rate times gradient, but also with the regularization parameter involved to prefer smaller weights.
             self.weights[current_layer] = (1-self.learning_rate*self.lmbd/len(activations))*self.weights[current_layer] - self.learning_rate*np.dot(activations.T, error)
             self.biases[current_layer] = self.biases[current_layer] - self.learning_rate*np.sum(error, axis=0)
             current_layer += 1
         
     def train(self, data, target, data_val=None, target_val=None): 
-        batch_size = int(len(data)/self.minibatches)
+        minibatches = self.minibatches
+        n = len(data)
+        batch_size = int(n/minibatches)
         
         self.cost_train = [] 
         self.cost_test = []
         
         for i in range(self.epochs):
-            #For each epoch, shuffle the train and test data with help of Scikit learn, to make minibatches unique. 
+            #For each epoch, shuffle the train and test data with help of Scikit learn, to make minibatches unique.
             data_shuffle, target_shuffle = shuffle(data, target)
-            #Pick one minibatch at random. Keep train of corresponding test data. 
+            #Pick one minibatch at random. Keep train of corresponding test data.
             batch_chosen = np.random.randint(0, self.minibatches)
             data_minibatch = data_shuffle[batch_chosen:batch_chosen+batch_size]
             target_minibatch = target_shuffle[batch_chosen:batch_chosen+batch_size]
-            #Insert minibatch of training data as input in the input layer. 
+            #Insert minibatch of training data as input in the input layer.
             self.activations[0] = data_minibatch
             #Run normal neural network training
             self.feed_forward()
             self.backpropagation(target_minibatch)
             self.update_weights()
 
-            #Calculate cost for each epoc - not part of training, but to creat a plot to visualize training process. 
+            #Calculate cost for each epoc - not part of training, but to creat a plot to visualize training process.
             test_cost = self.compute_cost_function(self.predict(data_val), target_val)
             train_cost = self.compute_cost_function(self.predict(data), target)                                                         
             
