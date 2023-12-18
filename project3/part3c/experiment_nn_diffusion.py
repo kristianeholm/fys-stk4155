@@ -79,6 +79,7 @@ plt.show()
 # Also compute exact solution and error for these points.
 g_exact = tf.reshape(diffusionEquation_solution(x, t), (num_points, num_points))
 rel_err = np.abs((g - g_exact)/g)
+abs_err = np.abs((g - g_exact))
 
 fig = plt.figure(figsize=(10, 7))
 ax = fig.add_subplot(111, projection='3d')
@@ -93,24 +94,23 @@ plt.savefig('exact_solution_diffusion_.pdf')
 plt.show()
 
 #Plot relative error
-fig = plt.figure()
-ax = fig.add_subplot(111)
-fontsize = 16
-ticksize = 16
-plt.pcolormesh(X, T, rel_err, cmap="inferno")
-cbar = plt.colorbar()
-cbar.set_label("Relative error", size=fontsize)
-cbar.ax.tick_params(labelsize=ticksize)
-cbar.formatter.set_powerlimits((0,0))
-cbar.update_ticks()
-plt.xticks(size=ticksize)
-plt.yticks(size=ticksize)
-ax.set_xlabel(r"$x$", size=fontsize)
-ax.set_ylabel(r"$t$", size=fontsize)
-
-
-plt.savefig('relative_error.pdf')
-plt.show()
+#fig = plt.figure()
+#ax = fig.add_subplot(111)
+#fontsize = 16
+#ticksize = 16
+#plt.pcolormesh(X, T, rel_err, cmap="inferno")
+#cbar = plt.colorbar()
+#cbar.set_label("Relative error", size=fontsize)
+#cbar.ax.tick_params(labelsize=ticksize)
+#cbar.formatter.set_powerlimits((0,0))
+#cbar.update_ticks()
+#plt.xticks(size=ticksize)
+#plt.yticks(size=ticksize)
+#ax.set_xlabel(r"$x$", size=fontsize)
+#ax.set_ylabel(r"$t$", size=fontsize)
+#
+#plt.savefig('relative_error.pdf')
+#plt.show()
 
 #Plotting heat map of absolute error in logscale
 #u_grid = np.zeros((t_size, x_size))
@@ -124,7 +124,7 @@ plt.show()
 from matplotlib import ticker, cm
 ##plotting the contourf
 #X, T = np.meshgrid(x, t)
-cs = plt.contourf(X, T, rel_err,
+cs = plt.contourf(X, T, abs_err,
                   locator=ticker.LogLocator(),
                   cmap="autumn")
 
@@ -136,3 +136,29 @@ plt.xlabel("x")
 plt.savefig('exact_solution_diffusion_.pdf')
 plt.show()
 
+
+#Now also plot MSE to get a fair comparasion with Forward Euler
+#t_size = len(t)
+#print("Length t ", len(t))
+#
+##we'll use the mse, comparing z and u_numeric
+#
+#mse_time = np.zeros(t_size)
+#
+#for j in range(t_size):
+#    #print('Getting MSE for t=', j)
+#    exact = diffusionEquation_solution(x, t[j])
+#    #f_predict = my_model.predict(x, t)
+#    #g = tf.reshape(f_predict, (num_points, num_points))
+#    numeric = f_predict[j, :]
+#
+#    mse = ((exact - numeric) ** 2).numpy().mean(axis=None)
+#    mse_time[j] = mse
+#
+#plt.plot(t, np.log(mse_time), label=f"dx")
+#plt.legend()
+#plt.ylabel("log(Mse)")
+#plt.xlabel("time")
+#
+#plt.savefig('log_mse.pdf')
+#plt.show()
