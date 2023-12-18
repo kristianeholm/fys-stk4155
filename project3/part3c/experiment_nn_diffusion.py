@@ -5,8 +5,12 @@ from neural_network_pde_diffusion import NeuralNetworkPDEDiffusion
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+#Hyper-parameters selected
+num_layers=2
+learning_rate=0.01
+activation_function="relu"
 
-
+#Random seed fixed for more stable results while experimenting with different NN
 seed = 1234
 tf.random.set_seed(seed)
 np.random.seed(seed)
@@ -28,13 +32,11 @@ t = np.linspace(0,  0.15, datapointst)
 x, t = np.meshgrid(x, t)
 x, t = x.ravel(), t.ravel()
 
-num_layers=2
-learning_rate=0.01
 #Fit the model
 layers = [200]*num_layers + [1]
 input_sz = 2
 epochs = 300
-my_model = NeuralNetworkPDEDiffusion(layers=layers, input_sz=input_sz, learning_rate=learning_rate)
+my_model = NeuralNetworkPDEDiffusion(layers=layers, activation_function=activation_function, learning_rate=learning_rate)
 print("\n")
 loss = my_model.train_model(x=x, t=t, epochs=epochs)
 epochs_array = np.linspace(1, epochs, epochs)
