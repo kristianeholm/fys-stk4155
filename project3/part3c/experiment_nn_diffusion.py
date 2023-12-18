@@ -82,6 +82,7 @@ fig = plt.figure(figsize=(10, 7))
 ax = fig.add_subplot(111, projection='3d')
 ax.plot_surface(X, T, g_exact, label="leastsquare surface", cmap=cm.coolwarm)
 
+plt.title('Loss function as MSE over diff eq equiality per epoch')
 ax.set_xlabel('x')
 ax.set_ylabel('t')
 ax.set_zlabel('Exact solution u(x, t)')
@@ -108,3 +109,28 @@ ax.set_ylabel(r"$t$", size=fontsize)
 
 plt.savefig('relative_error.pdf')
 plt.show()
+
+#Plotting heat map of absolute error in logscale
+#u_grid = np.zeros((t_size, x_size))
+#
+#for j in range(t_size):
+#    for i in range(x_size):
+#        exact = diffusionEquation_solution(x[i], t[j])
+#        numeric = u_numeric[j, i]
+#        u_grid[j, i] = numeric - exact
+
+from matplotlib import ticker, cm
+##plotting the contourf
+#X, T = np.meshgrid(x, t)
+cs = plt.contourf(X, T, rel_err,
+                  locator=ticker.LogLocator(),
+                  cmap="autumn")
+
+cbar = plt.colorbar(cs)
+
+plt.title('Absolute error between analytic and Neural Network')
+plt.ylabel("t")
+plt.xlabel("x")
+plt.savefig('exact_solution_diffusion_.pdf')
+plt.show()
+
