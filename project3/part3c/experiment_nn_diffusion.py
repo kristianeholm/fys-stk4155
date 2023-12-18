@@ -9,7 +9,7 @@ from matplotlib import cm
 learning_rate=0.01
 activation_function="relu"
 num_layers=2
-nodes_per_layer = 500
+nodes_per_layer = 400
 epochs = 300
 
 #Defining the amount of data
@@ -149,4 +149,3 @@ plt.show()
 
 actualMSE = np.square(abs_err).mean()
 print("Final real MSE compared with analytics = ", actualMSE)
-print(abs_err.shape)
