@@ -17,12 +17,12 @@ np.random.seed(seed)
 class NeuralNetworkPDEDiffusion(tf.keras.Sequential):
     def __init__(self, layers, activation_function, learning_rate):
         super(NeuralNetworkPDEDiffusion, self).__init__()
-        # First hidden layer, connected to input, the 2 in input shape since we always have x and t
-        self.add(Dense(layers[0], input_shape=(2,), activation=activation_function))
+        # First hidden layer, connected to input.
+        self.add(Dense(layers[0], activation=activation_function))
 
         # Rest of hidden layers
         for layer in layers[1:-1]:
-            self.add(Dense(layer, activation="relu"))
+            self.add(Dense(layer, activation=activation_function))
 
         # Output layer
         self.add(Dense(layers[-1], activation="linear"))
