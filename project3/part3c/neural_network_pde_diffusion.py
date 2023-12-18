@@ -18,11 +18,11 @@ class NeuralNetworkPDEDiffusion(tf.keras.Sequential):
     def __init__(self, layers, input_sz, learning_rate):
         super(NeuralNetworkPDEDiffusion, self).__init__()
         # First hidden layer, connected to input
-        self.add(Dense(layers[0], input_shape=(input_sz,), activation="sigmoid"))
+        self.add(Dense(layers[0], input_shape=(input_sz,), activation="relu"))
 
         # Rest of hidden layers
         for layer in layers[1:-1]:
-            self.add(Dense(layer, activation="sigmoid"))
+            self.add(Dense(layer, activation="relu"))
 
         # Output layer
         self.add(Dense(layers[-1], activation="linear"))
