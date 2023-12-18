@@ -117,7 +117,7 @@ plt.show()
 
 
 
-"""##grid test
+##grid test
 u_grid = np.zeros((t_size, x_size))
 
 for j in range(t_size):
@@ -138,7 +138,7 @@ cbar = plt.colorbar(cs)
 plt.title('Absolute error between analytic and numeric solution')
 plt.ylabel("t")
 plt.xlabel("x")
-plt.show()"""
+plt.show()
 
 
 
