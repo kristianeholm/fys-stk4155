@@ -6,9 +6,15 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 #Hyper-parameters selected
-num_layers=2
 learning_rate=0.01
 activation_function="relu"
+num_layers=2
+nodes_per_layer = 200
+epochs = 300
+
+#Defining the amount of data
+datapointsx = 400
+datapointst = 50
 
 #Random seed fixed for more stable results while experimenting with different NN
 seed = 1234
@@ -24,8 +30,6 @@ def diffusionEquation_solution(x, t):
 
     return F*G
 
-datapointsx = 400
-datapointst = 50
 x = np.linspace(0, 1, datapointsx)
 t = np.linspace(0,  0.15, datapointst)
     
@@ -33,9 +37,7 @@ x, t = np.meshgrid(x, t)
 x, t = x.ravel(), t.ravel()
 
 #Fit the model
-layers = [200]*num_layers + [1]
-input_sz = 2
-epochs = 300
+layers = [nodes_per_layer]*num_layers + [1]
 my_model = NeuralNetworkPDEDiffusion(layers=layers, activation_function=activation_function, learning_rate=learning_rate)
 print("\n")
 loss = my_model.train_model(x=x, t=t, epochs=epochs)
