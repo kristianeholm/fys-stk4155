@@ -93,33 +93,7 @@ ax.set_title("Exact 1D diffusion equation solution")
 plt.savefig('exact_solution_diffusion_.pdf')
 plt.show()
 
-#Plot relative error
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#fontsize = 16
-#ticksize = 16
-#plt.pcolormesh(X, T, rel_err, cmap="inferno")
-#cbar = plt.colorbar()
-#cbar.set_label("Relative error", size=fontsize)
-#cbar.ax.tick_params(labelsize=ticksize)
-#cbar.formatter.set_powerlimits((0,0))
-#cbar.update_ticks()
-#plt.xticks(size=ticksize)
-#plt.yticks(size=ticksize)
-#ax.set_xlabel(r"$x$", size=fontsize)
-#ax.set_ylabel(r"$t$", size=fontsize)
-#
-#plt.savefig('relative_error.pdf')
-#plt.show()
-
-#Plotting heat map of absolute error in logscale
-#u_grid = np.zeros((t_size, x_size))
-#
-#for j in range(t_size):
-#    for i in range(x_size):
-#        exact = diffusionEquation_solution(x[i], t[j])
-#        numeric = u_numeric[j, i]
-#        u_grid[j, i] = numeric - exact
+#Plot absolute and relative errors.
 
 from matplotlib import ticker, cm
 ##plotting the contourf
@@ -133,7 +107,19 @@ cbar = plt.colorbar(cs)
 plt.title('Absolute error between analytic and Neural Network')
 plt.ylabel("t")
 plt.xlabel("x")
-plt.savefig('exact_solution_diffusion_.pdf')
+plt.savefig('absolute_error_NN_diffusion_.pdf')
+plt.show()
+
+cs = plt.contourf(X, T, rel_err,
+                  locator=ticker.LogLocator(),
+                  cmap="autumn")
+
+cbar = plt.colorbar(cs)
+
+plt.title('Relative error between analytic and Neural Network')
+plt.ylabel("t")
+plt.xlabel("x")
+plt.savefig('relative_error_NN_diffusion_.pdf')
 plt.show()
 
 

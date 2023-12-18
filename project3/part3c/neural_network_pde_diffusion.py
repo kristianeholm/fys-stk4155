@@ -17,11 +17,9 @@ np.random.seed(seed)
 class NeuralNetworkPDEDiffusion(tf.keras.Sequential):
     def __init__(self, layers, activation_function, learning_rate):
         super(NeuralNetworkPDEDiffusion, self).__init__()
-        # First hidden layer, connected to input.
-        self.add(Dense(layers[0], activation=activation_function))
 
         # Rest of hidden layers
-        for layer in layers[1:-1]:
+        for layer in layers[0:-1]:
             self.add(Dense(layer, activation=activation_function))
 
         # Output layer
