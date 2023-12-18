@@ -20,7 +20,7 @@ def diffusionEquation_solution(x, t):
 
     return F*G
 
-datapointsx = 200
+datapointsx = 400
 datapointst = 50
 x = np.linspace(0, 1, datapointsx)
 t = np.linspace(0,  0.15, datapointst)
@@ -28,14 +28,13 @@ t = np.linspace(0,  0.15, datapointst)
 x, t = np.meshgrid(x, t)
 x, t = x.ravel(), t.ravel()
 
-print(x.size)
-print(t.size)
-
+num_layers=2
+learning_rate=0.01
 #Fit the model
-layers = [100]*4 + [1]
+layers = [200]*num_layers + [1]
 input_sz = 2
 epochs = 300
-my_model = NeuralNetworkPDEDiffusion(layers=layers, input_sz=input_sz, learning_rate=0.01)
+my_model = NeuralNetworkPDEDiffusion(layers=layers, input_sz=input_sz, learning_rate=learning_rate)
 print("\n")
 loss = my_model.train_model(x=x, t=t, epochs=epochs)
 epochs_array = np.linspace(1, epochs, epochs)
@@ -45,6 +44,7 @@ print("Final MSE value ", loss[-1])
 plt.plot(epochs_array, loss)
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
+plt.savefig("neural_network_loss_function_{}_{}_{}.pdf".format(num_layers, datapointsx, learning_rate))
 plt.show()
 
 
@@ -67,6 +67,9 @@ ax.set_xlabel('x')
 ax.set_ylabel('t')
 ax.set_zlabel('NN solution u(x, t)')
 ax.set_title("Neural Network 1D diffusion equation solution")
+
+plt.savefig("neural_network_solution_{}_{}_{}.pdf".format(num_layers, datapointsx, learning_rate))
+#plt.savefig('neural_network_solution_.pdf')
 plt.show()
 
 # Also compute exact solution and error for these points.
@@ -81,6 +84,7 @@ ax.set_xlabel('x')
 ax.set_ylabel('t')
 ax.set_zlabel('Exact solution u(x, t)')
 ax.set_title("Exact 1D diffusion equation solution")
+plt.savefig('exact_solution_diffusion_.pdf')
 plt.show()
 
 #Plot relative error
