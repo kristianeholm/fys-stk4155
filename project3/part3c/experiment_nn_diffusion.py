@@ -9,12 +9,12 @@ from matplotlib import cm
 learning_rate=0.01
 activation_function="relu"
 num_layers=2
-nodes_per_layer = 200
+nodes_per_layer = 500
 epochs = 300
 
 #Defining the amount of data
 datapointsx = 400
-datapointst = 50
+datapointst = 100
 
 #Random seed fixed for more stable results while experimenting with different NN
 seed = 1234
@@ -24,10 +24,8 @@ np.random.seed(seed)
 #The analytical solution, for comparing against for exact error. 
 def diffusionEquation_solution(x, t):
     L = 1
-
     F = np.sin(np.pi/L * x)
     G = np.exp(-(np.pi/L)**2 * t)
-
     return F*G
 
 x = np.linspace(0, 1, datapointsx)
@@ -39,11 +37,11 @@ x, t = x.ravel(), t.ravel()
 #Fit the model
 layers = [nodes_per_layer]*num_layers + [1]
 my_model = NeuralNetworkPDEDiffusion(layers=layers, activation_function=activation_function, learning_rate=learning_rate)
-print("\n")
+
 loss = my_model.train_model(x=x, t=t, epochs=epochs)
 epochs_array = np.linspace(1, epochs, epochs)
 
-print("Final MSE value ", loss[-1])
+print("Final training MSE value ", loss[-1])
 #Plot loss vs epochs
 plt.plot(epochs_array, loss)
 plt.xlabel("Epochs")
@@ -53,7 +51,7 @@ plt.show()
 
 
 # Define grid and compute predicted solution
-num_points = 400
+num_points = 500
 start = tf.constant(0.01, dtype=tf.float32)
 stop = tf.constant(0.99, dtype=tf.float32)
 start_t = tf.constant(0, dtype=tf.float32)
@@ -148,3 +146,7 @@ plt.show()
 #
 #plt.savefig('log_mse.pdf')
 #plt.show()
+
+actualMSE = np.square(abs_err).mean()
+print("Final real MSE compared with analytics = ", actualMSE)
+print(abs_err.shape)
