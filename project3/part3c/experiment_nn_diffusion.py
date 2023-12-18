@@ -103,3 +103,6 @@ plt.yticks(size=ticksize)
 ax.set_xlabel(r"$x$", size=fontsize)
 ax.set_ylabel(r"$t$", size=fontsize)
 
+
+plt.savefig('relative_error.pdf')
+plt.show()
